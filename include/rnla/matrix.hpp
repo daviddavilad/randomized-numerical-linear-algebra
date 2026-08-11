@@ -30,4 +30,7 @@ class Matrix {
   std::vector<double> data_;
 };
 
+// C = op(A) * op(B), where op(X) is X or X^T.
+Matrix matmul(const Matrix& A, const Matrix& B, bool transA = false, bool transB = false);
+
 }  // namespace rnla
