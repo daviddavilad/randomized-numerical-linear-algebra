@@ -19,4 +19,22 @@ void dgemm_(
     const int* ldc
 );
 
+
+void dgesdd_(
+    const char* jobz,
+    const int* m,
+    const int* n,
+    double* a,
+    const int* lda,
+    double* s,
+    double* u,
+    const int* ldu,
+    double* vt,
+    const int* ldvt,
+    double* work,
+    const int* lwork,
+    int* iwork,
+    int* info
+);
+
 }
