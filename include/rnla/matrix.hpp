@@ -7,6 +7,7 @@ namespace rnla {
 
 class Matrix {
  public:
+  Matrix() = default;
   Matrix(int rows, int cols)
       : rows_(rows), cols_(cols), data_(static_cast<std::size_t>(rows) * cols) {}
 
@@ -25,8 +26,8 @@ class Matrix {
   const double* data() const { return data_.data(); }
 
  private:
-  int rows_;
-  int cols_;
+  int rows_ = 0;
+  int cols_ = 0;
   std::vector<double> data_;
 };
 
