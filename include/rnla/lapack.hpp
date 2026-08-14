@@ -19,7 +19,6 @@ void dgemm_(
     const int* ldc
 );
 
-
 void dgesdd_(
     const char* jobz,
     const int* m,
@@ -34,6 +33,32 @@ void dgesdd_(
     double* work,
     const int* lwork,
     int* iwork,
+    int* info
+);
+
+// QR factorization: R in the upper triangle of A, Householder reflectors below,
+// with their scalar factors in tau.
+void dgeqrf_(
+    const int* m,
+    const int* n,
+    double* a,
+    const int* lda,
+    double* tau,
+    double* work,
+    const int* lwork,
+    int* info
+);
+
+// Expands the reflectors from dgeqrf_ into an explicit orthonormal Q.
+void dorgqr_(
+    const int* m,
+    const int* n,
+    const int* k,
+    double* a,
+    const int* lda,
+    const double* tau,
+    double* work,
+    const int* lwork,
     int* info
 );
 

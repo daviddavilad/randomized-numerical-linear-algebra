@@ -5,6 +5,7 @@
 
 #include "rnla/linalg.hpp"
 #include "rnla/matrix.hpp"
+#include "rnla/random.hpp"
 
 namespace {
 
@@ -100,6 +101,17 @@ void test_svd_orthonormality() {
     }
 }
 
+void test_orth() {
+  rnla::Matrix G = rnla::gaussian(200, 30, 12345);
+  rnla::Matrix Q = rnla::orth(G);
+
+  check(Q.rows() == 200 && Q.cols() == 30, "orth preserves shape");
+
+  const double err = rnla::orthogonality_error(Q);
+  std::printf("  ||Q^T Q - I||_F = %.3e (Householder QR)\n", err);
+  check(err < 1e-13, "Q has orthonormal columns");
+}
+
 }  // namespace
 
 int main() {
@@ -108,6 +120,7 @@ int main() {
   test_gram_identity();
   test_svd_reconstruction();
   test_svd_orthonormality();
+  test_orth();
   std::printf("%s (%d failures)\n", failures ? "FAILED" : "OK", failures);
   return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }

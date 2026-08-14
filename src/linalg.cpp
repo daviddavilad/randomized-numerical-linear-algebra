@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
+#include <cmath>
 
 #include "rnla/lapack.hpp"
 
@@ -93,6 +94,69 @@ TruncatedSVD truncated_svd(const Matrix& A, int k) {
     for (int i = 0; i < k; ++i) out.Vt(i, j) = Vtfull(i, j);
 
   return out;
+}
+
+Matrix orth(const Matrix& A) {
+  Matrix Q = A;
+
+  const int m = A.rows();
+  const int n = A.cols();
+  const int lda = Q.ld();
+  const int k = std::min(m, n);
+
+  if (m < n)
+    throw std::invalid_argument("orth requires m >= n (tall or square)");
+
+  std::vector<double> tau(k);
+  int info = 0;
+
+  // --- dgeqrf: factorize ------------------------------------------------
+  double wkopt = 0.0;
+  int lwork = -1;
+  // dgeqrf_ workspace query
+  dgeqrf_(&m, &n, Q.data(), &lda, tau.data(), &wkopt, &lwork, &info);
+
+  lwork = static_cast<int>(wkopt);
+  std::vector<double> work(std::max(lwork, 1));
+
+  // dgeqrf_ real call
+  dgeqrf_(&m, &n, Q.data(), &lda, tau.data(), work.data(), &lwork, &info);
+
+  if (info != 0)
+    throw std::runtime_error("dgeqrf failed, info = " + std::to_string(info));
+
+  // --- dorgqr: expand the reflectors into Q -----------------------------
+  lwork = -1;
+  // dorgqr_ workspace query
+  dorgqr_(&m, &n, &k, Q.data(), &lda, tau.data(), &wkopt, &lwork, &info);
+
+  lwork = static_cast<int>(wkopt);
+  work.assign(std::max(lwork, 1), 0.0);
+
+  // dorgqr_ real call
+  dorgqr_(&m, &n, &k, Q.data(), &lda, tau.data(), work.data(), &lwork, &info);
+
+  if (info != 0)
+    throw std::runtime_error("dorgqr failed, info = " + std::to_string(info));
+
+  return Q;
+}
+
+double norm_fro(const Matrix& A) {
+  double acc = 0.0;
+  // Accumulate squares of every entry, j outer
+  for (int j = 0; j < A.cols(); ++j)
+    for (int i = 0; i < A.rows(); ++i)
+      acc += A(i, j) * A(i, j);
+  return std::sqrt(acc);
+}
+
+double orthogonality_error(const Matrix& Q) {
+  Matrix G = matmul(Q, Q, true, false);   // Q^T Q, k x k
+  // Subtract 1 from each diagonal entry
+  for (int i = 0; i < G.rows(); ++i)
+    G(i, i) -= 1.0;
+  return norm_fro(G);
 }
 
 }  // namespace rnla
