@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
 
-add_library(rnla src/matrix.cpp src/linalg.cpp src/random.cpp)
+add_library(rnla src/matrix.cpp src/linalg.cpp src/random.cpp src/test_matrices.cpp)
 target_include_directories(rnla PUBLIC include)
 target_link_libraries(rnla PUBLIC ${ACCELERATE_FRAMEWORK})
 target_compile_options(rnla PRIVATE -Wall -Wextra -Wpedantic)

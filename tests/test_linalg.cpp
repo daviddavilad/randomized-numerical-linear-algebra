@@ -6,6 +6,7 @@
 #include "rnla/linalg.hpp"
 #include "rnla/matrix.hpp"
 #include "rnla/random.hpp"
+#include "rnla/test_matrices.hpp"
 
 namespace {
 
@@ -112,6 +113,20 @@ void test_orth() {
   check(err < 1e-13, "Q has orthonormal columns");
 }
 
+void test_spectrum_is_exact() {
+  auto tm = rnla::make_test_matrix(120, 80, rnla::Spectrum::Exponential, 0.05, 7);
+  std::vector<double> s = rnla::singular_values(tm.A);
+
+  check(s.size() == tm.sigma.size(), "spectrum has min(m, n) entries");
+
+  double worst = 0.0;
+  for (std::size_t i = 0; i < s.size(); ++i)
+    worst = std::max(worst, std::abs(s[i] - tm.sigma[i]) / tm.sigma[0]);
+
+  std::printf("  max relative spectrum deviation = %.3e\n", worst);
+  check(worst < 1e-12, "generated matrix has the requested singular values");
+}
+
 }  // namespace
 
 int main() {
@@ -121,6 +136,7 @@ int main() {
   test_svd_reconstruction();
   test_svd_orthonormality();
   test_orth();
+  test_spectrum_is_exact();
   std::printf("%s (%d failures)\n", failures ? "FAILED" : "OK", failures);
   return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
