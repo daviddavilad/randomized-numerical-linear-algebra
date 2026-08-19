@@ -133,29 +133,9 @@ void test_rsvd_ratio() {
 
   auto tm = rnla::make_test_matrix(m, n, rnla::Spectrum::Exponential, 0.1, 99);
 
-  // Eckart-Young optimum: ||A - A_k||_F = sqrt(sum_{i>k} sigma_i^2)
-  double tail = 0.0;
-  for (std::size_t i = k; i < tm.sigma.size(); ++i)
-    tail += tm.sigma[i] * tm.sigma[i];
-  const double optimal = std::sqrt(tail);
-
+  const double optimal = rnla::eckart_young_fro(tm.sigma, k);
   rnla::TruncatedSVD svd = rnla::randomized_svd(tm.A, k, 10, 42);
-
-  // Reconstruct U * diag(s) * Vt
-  rnla::Matrix Uscaled = svd.U;
-  for (int j = 0; j < k; ++j)
-    for (int i = 0; i < Uscaled.rows(); ++i)
-      Uscaled(i, j) *= svd.s[j];
-
-  rnla::Matrix reconstruction = rnla::matmul(Uscaled, svd.Vt);
-
-  // Residual A - A_k, then its Frobenius norm
-  rnla::Matrix residual(m, n);
-  for (int j = 0; j < n; ++j)
-    for (int i = 0; i < m; ++i)
-      residual(i, j) = tm.A(i, j) - reconstruction(i, j);
-
-  const double achieved = rnla::norm_fro(residual);
+  const double achieved = rnla::reconstruction_error(tm.A, svd);
 
   std::printf("  rSVD/optimal = %.5f  (exponential, alpha=0.1, k=%d, p=10)\n",
               achieved / optimal, k);

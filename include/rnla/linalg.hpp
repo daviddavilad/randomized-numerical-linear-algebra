@@ -28,4 +28,11 @@ double orthogonality_error(const Matrix& Q);
 // Frobenius norm.
 double norm_fro(const Matrix& A);
 
+// ||A - U diag(s) Vt||_F  — how well the factorization reproduces A.
+double reconstruction_error(const Matrix& A, const TruncatedSVD& svd);
+
+// Eckart-Young optimum in Frobenius norm: sqrt(sum_{i>k} sigma_i^2).
+// The best any rank-k matrix can do, given the true spectrum.
+double eckart_young_fro(const std::vector<double>& sigma, int k);
+
 }  // namespace rnla

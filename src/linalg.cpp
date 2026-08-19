@@ -159,4 +159,27 @@ double orthogonality_error(const Matrix& Q) {
   return norm_fro(G);
 }
 
+double eckart_young_fro(const std::vector<double>& sigma, int k) {
+  double tail = 0.0;
+  for (std::size_t i = static_cast<std::size_t>(k); i < sigma.size(); ++i)
+    tail += sigma[i] * sigma[i];
+  return std::sqrt(tail);
+}
+
+double reconstruction_error(const Matrix& A, const TruncatedSVD& svd) {
+  const int k = static_cast<int>(svd.s.size());
+
+  Matrix Us = svd.U;
+  for (int j = 0; j < k; ++j)
+    for (int i = 0; i < Us.rows(); ++i) Us(i, j) *= svd.s[j];
+
+  Matrix Ak = matmul(Us, svd.Vt);
+
+  Matrix R(A.rows(), A.cols());
+  for (int j = 0; j < A.cols(); ++j)
+    for (int i = 0; i < A.rows(); ++i) R(i, j) = A(i, j) - Ak(i, j);
+
+  return norm_fro(R);
+}
+
 }  // namespace rnla
