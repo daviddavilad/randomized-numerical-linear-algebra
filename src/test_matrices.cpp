@@ -24,6 +24,9 @@ TestMatrix make_test_matrix(int m, int n, Spectrum kind, double alpha, std::uint
         sigma[i] = std::exp(-alpha * i);
       }
       break;
+    case Spectrum::Flat:
+      for (int i = 0; i < r; ++i) sigma[i] = 1.0;
+      break;
   }
 
   // U = orth(gaussian(m, r, seed))

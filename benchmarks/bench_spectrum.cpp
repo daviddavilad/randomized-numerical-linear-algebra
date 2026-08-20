@@ -33,10 +33,10 @@ int main() {
       {rnla::Spectrum::Polynomial, "poly", 1.5},
       {rnla::Spectrum::Polynomial, "poly", 1.0},
       {rnla::Spectrum::Polynomial, "poly", 0.5},
+      {rnla::Spectrum::Flat,       "flat", 0.0},
   };
 
-  std::printf("%-6s %6s %8s %10s %10s %10s\n",
-              "family", "alpha", "gap", "opt_rel", "mean", "max");
+  std::printf("%-6s %6s %8s %10s %12s %12s\n", "family", "alpha", "gap", "opt_rel", "mean", "max");
 
   for (const Case& c : cases) {
     auto tm = rnla::make_test_matrix(m, n, c.kind, c.alpha, 7);
@@ -53,7 +53,7 @@ int main() {
     }
     double mean = std::accumulate(ratios.begin(), ratios.end(), 0.0) / ratios.size();
     double max = *std::max_element(ratios.begin(), ratios.end());
-    std::printf("%-6s %6.2f %10.4f %10.2e %10.4f %10.4f\n", c.label, c.alpha, gap, opt_rel, mean, max);
+    std::printf("%-6s %6.2f %10.4f %10.2e %12.9f %12.9f\n", c.label, c.alpha, gap, opt_rel, mean, max);
   }
   return 0;
 }

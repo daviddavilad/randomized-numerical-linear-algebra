@@ -13,6 +13,10 @@ enum class Spectrum {
   Polynomial,
   // sigma_i = exp(-alpha * i). Fast decay: the easy case.
   Exponential,
+  // sigma_i = 1 for all i. Maximally flat: gap = 1.000, the worst possible
+  // value under the local-gap hypothesis, and the largest tail dimension in
+  // the study. The two pictures predict opposite results here.
+  Flat,
 };
 
 // A = U * diag(sigma) * V^T with random orthonormal U and V, so the singular
