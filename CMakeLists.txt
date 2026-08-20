@@ -6,11 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
-
 add_library(rnla src/matrix.cpp src/linalg.cpp src/random.cpp src/test_matrices.cpp src/rsvd.cpp)
 target_include_directories(rnla PUBLIC include)
-target_link_libraries(rnla PUBLIC ${ACCELERATE_FRAMEWORK})
+
+if(APPLE)
+  find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
+  target_link_libraries(rnla PUBLIC ${ACCELERATE_FRAMEWORK})
+  message(STATUS "BLAS/LAPACK backend: Apple Accelerate")
+else()
+  find_package(LAPACK REQUIRED)
+  target_link_libraries(rnla PUBLIC LAPACK::LAPACK)
+  message(STATUS "BLAS/LAPACK backend: ${LAPACK_LIBRARIES}")
+endif()
 target_compile_options(rnla PRIVATE -Wall -Wextra -Wpedantic)
 
 add_executable(scratch src/main.cpp)

@@ -137,8 +137,7 @@ void test_rsvd_ratio() {
   rnla::TruncatedSVD svd = rnla::randomized_svd(tm.A, k, 10, 42);
   const double achieved = rnla::reconstruction_error(tm.A, svd);
 
-  std::printf("  rSVD/optimal = %.5f  (exponential, alpha=0.1, k=%d, p=10)\n",
-              achieved / optimal, k);
+    std::printf("  rSVD/optimal = %.12f  (exponential, alpha=0.1, k=%d, p=10)\n", achieved / optimal, k);
   check(achieved >= optimal * 0.999, "cannot beat Eckart-Young");
   check(achieved < optimal * 1.5, "rSVD within 1.5x of optimal");
 }
