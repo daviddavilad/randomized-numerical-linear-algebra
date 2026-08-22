@@ -48,7 +48,7 @@ int main() {
     // print gap, optimal/||A||_F, mean ratio, max ratio
     std::vector<double> ratios;
     for (int seed = 0; seed < n_seeds; ++seed) {
-      auto svd = rnla::randomized_svd(tm.A, k, p, seed);
+      auto svd = rnla::randomized_svd(tm.A, k, p, 0, seed);
       ratios.push_back(rnla::reconstruction_error(tm.A, svd) / optimal);
     }
     double mean = std::accumulate(ratios.begin(), ratios.end(), 0.0) / ratios.size();

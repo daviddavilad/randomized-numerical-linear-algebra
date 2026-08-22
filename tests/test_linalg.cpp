@@ -134,12 +134,25 @@ void test_rsvd_ratio() {
   auto tm = rnla::make_test_matrix(m, n, rnla::Spectrum::Exponential, 0.1, 99);
 
   const double optimal = rnla::eckart_young_fro(tm.sigma, k);
-  rnla::TruncatedSVD svd = rnla::randomized_svd(tm.A, k, 10, 42);
+  rnla::TruncatedSVD svd = rnla::randomized_svd(tm.A, k, 10, 0, 42);
   const double achieved = rnla::reconstruction_error(tm.A, svd);
 
     std::printf("  rSVD/optimal = %.12f  (exponential, alpha=0.1, k=%d, p=10)\n", achieved / optimal, k);
   check(achieved >= optimal * 0.999, "cannot beat Eckart-Young");
   check(achieved < optimal * 1.5, "rSVD within 1.5x of optimal");
+}
+
+void test_power_iteration_stability() {
+  const int m = 300, n = 200, k = 20, p = 10;
+  auto tm = rnla::make_test_matrix(m, n, rnla::Spectrum::Polynomial, 2.0, 7);
+  const double optimal = rnla::eckart_young_fro(tm.sigma, k);
+
+  std::printf("  naive power iteration, poly alpha=2.0:\n");
+  for (int q = 0; q <= 3; ++q) {
+    auto svd = rnla::randomized_svd(tm.A, k, p, q, 42);
+    const double ratio = rnla::reconstruction_error(tm.A, svd) / optimal;
+    std::printf("    q=%d  ratio = %.9f\n", q, ratio);
+  }
 }
 
 }  // namespace
@@ -153,6 +166,7 @@ int main() {
   test_orth();
   test_spectrum_is_exact();
   test_rsvd_ratio();
+  test_power_iteration_stability();
   std::printf("%s (%d failures)\n", failures ? "FAILED" : "OK", failures);
   return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
