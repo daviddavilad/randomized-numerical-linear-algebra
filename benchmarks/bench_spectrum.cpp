@@ -36,7 +36,7 @@ int main() {
       {rnla::Spectrum::Flat,       "flat", 0.0},
   };
 
-  std::printf("%-6s %6s %8s %10s %12s %12s\n", "family", "alpha", "gap", "opt_rel", "mean", "max");
+  std::printf("%-6s %6s %8s %10s %12s %12s %12s\n", "family", "alpha", "gap", "opt_rel", "q=0", "q=1", "q=2");
 
   for (const Case& c : cases) {
     auto tm = rnla::make_test_matrix(m, n, c.kind, c.alpha, 7);
@@ -45,15 +45,17 @@ int main() {
     const double optimal = rnla::eckart_young_fro(tm.sigma, k);
     const double opt_rel = optimal / rnla::norm_fro(tm.A);
 
-    // print gap, optimal/||A||_F, mean ratio, max ratio
-    std::vector<double> ratios;
-    for (int seed = 0; seed < n_seeds; ++seed) {
-      auto svd = rnla::randomized_svd(tm.A, k, p, 0, seed);
-      ratios.push_back(rnla::reconstruction_error(tm.A, svd) / optimal);
+    double means[3];
+    for (int q = 0; q <= 2; ++q) {
+      std::vector<double> ratios;
+      for (int seed = 0; seed < n_seeds; ++seed) {
+        auto svd = rnla::randomized_svd(tm.A, k, p, q, seed);
+        ratios.push_back(rnla::reconstruction_error(tm.A, svd) / optimal);
+      }
+      means[q] = std::accumulate(ratios.begin(), ratios.end(), 0.0) / ratios.size();
     }
-    double mean = std::accumulate(ratios.begin(), ratios.end(), 0.0) / ratios.size();
-    double max = *std::max_element(ratios.begin(), ratios.end());
-    std::printf("%-6s %6.2f %10.4f %10.2e %12.9f %12.9f\n", c.label, c.alpha, gap, opt_rel, mean, max);
+
+    std::printf("%-6s %6.1f %8.4f %10.2e %12.9f %12.9f %12.9f\n", c.label, c.alpha, gap, opt_rel, means[0], means[1], means[2]);
   }
   return 0;
 }

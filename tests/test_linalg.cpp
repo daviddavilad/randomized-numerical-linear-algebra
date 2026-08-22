@@ -142,16 +142,18 @@ void test_rsvd_ratio() {
   check(achieved < optimal * 1.5, "rSVD within 1.5x of optimal");
 }
 
-void test_power_iteration_stability() {
+void test_power_iteration_monotone() {
   const int m = 300, n = 200, k = 20, p = 10;
   auto tm = rnla::make_test_matrix(m, n, rnla::Spectrum::Polynomial, 2.0, 7);
   const double optimal = rnla::eckart_young_fro(tm.sigma, k);
 
-  std::printf("  naive power iteration, poly alpha=2.0:\n");
+  double prev = 0.0;
   for (int q = 0; q <= 3; ++q) {
     auto svd = rnla::randomized_svd(tm.A, k, p, q, 42);
     const double ratio = rnla::reconstruction_error(tm.A, svd) / optimal;
     std::printf("    q=%d  ratio = %.9f\n", q, ratio);
+    if (q > 0) check(ratio <= prev, "power iteration is monotone in q");
+    prev = ratio;
   }
 }
 
@@ -166,7 +168,7 @@ int main() {
   test_orth();
   test_spectrum_is_exact();
   test_rsvd_ratio();
-  test_power_iteration_stability();
+  test_power_iteration_monotone();
   std::printf("%s (%d failures)\n", failures ? "FAILED" : "OK", failures);
   return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
