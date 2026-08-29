@@ -45,7 +45,7 @@ The distinction between the first two is the point rather than a technicality. S
 | # | Hypothesis | Status | Falsification |
 |---|---|---|---|
 | **H1** | Error is governed by the local gap $\sigma_{k+1}/\sigma_k$. | **Rejected** | Two spectra with matched gaps (0.9048, 0.9070) gave 1.199 and 1.319. |
-| **H2** | Error is governed by effective tail dimension $$\mathrm{sr}_{\mathrm{tail}} = \Big(\sum_{j>k}\sigma_j^2\Big)\big/\sigma_{k+1}^2$$; difficulty peaks where it is comparable to the sketch width $\ell$. | **Supported, not decisive** | A spectrum pair with matched $\mathrm{sr}_{\text{tail}}$ and different error. |
+| **H2** | Error is governed by effective tail dimension $`\mathrm{sr}_\mathrm{tail} = (\sum_{j>k}\sigma_j^2)/\sigma_{k+1}^2`$; difficulty peaks where it is comparable to the sketch width $`\ell`$. | **Supported, not decisive** | A spectrum pair with matched $`\mathrm{sr}_\mathrm{tail}`$ and different error. |
 | **H3** | Flat spectra give ratio exactly 1 for every draw of $\Omega$. | **Proved and confirmed** | Any seed-to-seed variance, or ratio $\ne 1$. |
 | **H4** | Naive power iteration fails once $(\sigma_1/\sigma_\ell)^{2q+1}$ exceeds $1/\varepsilon$. | **Confirmed, predicted in advance** | Failure at a $q$ unrelated to that threshold. |
 | **H5** | Power iteration restores gap-monotonicity: at $q \ge 1$ the error curve is monotone in the gap. | **Observed at $q = 1, 2$** | An inversion at $q \ge 1$, or non-monotonicity returning at larger $q$. |
@@ -118,7 +118,7 @@ Current sweep: 11 spectra × 3 values of $q$ × 10 seeds, at $m = 300$, $n = 200
 
 *Computational (not yet instrumented):* wall-clock separated by phase (sketch, orthogonalization, projection, small SVD); peak memory; passes over $A$; analytic FLOP count.
 
-*Diagnostic:* $$\sigma_{k+1}/\sigma_k$$; $$\mathrm{sr}_{\mathrm{tail}}$$; dynamic range $$(\sigma_1/\sigma_\ell)^{2q+1}$$.
+*Diagnostic:* $`\sigma_{k+1}/\sigma_k`$; $`\mathrm{sr}_\mathrm{tail}`$; dynamic range $`(\sigma_1/\sigma_\ell)^{2q+1}`$.
 
 ### Important research figures (deliverables)
 
