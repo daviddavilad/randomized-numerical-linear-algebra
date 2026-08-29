@@ -8,7 +8,7 @@ Many matrices in scientific computing and machine learning are large but approxi
 
 Randomized methods invert this. Probe the matrix with $\ell = k + p$ random vectors, orthonormalize the result, and project:
 
-$$Y = A\Omega, \qquad Q = \operatorname{orth}(Y), \qquad B = Q^\top A, \qquad A \approx Q B_k$$
+$$Y = A\Omega, \qquad Q = \mathrm{orth}(Y), \qquad B = Q^\top A, \qquad A \approx Q B_k$$
 
 The cost scales with the rank you want, not the rank the matrix has. The obvious question is what accuracy that buys, and the usual answer is a worst-case bound.
 

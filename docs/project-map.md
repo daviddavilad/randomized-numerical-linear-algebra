@@ -11,49 +11,32 @@
 ### Working titles (tentative)
 
 1. *What Governs the Accuracy of Randomized Low-Rank Approximation?* - most acurate, currently the whole project.
-2. *Spectral Geometry and the Cost of Randomized Sketching* - use if the
-   tail-dimension result firms up into the central claim.
-3. *Gap-Independence in Practice: Block Krylov vs. Power Iteration* - use if the
-   V2 comparison turns out to be the strongest finding.
+2. *Spectral Geometry and the Cost of Randomized Sketching* - use if the tail-dimension result firms up into the central claim.
+3. *Gap-Independence in Practice: Block Krylov vs. Power Iteration* - use if the V2 comparison turns out to be the strongest finding.
 
 Start with (1) and reevaluate once V2 lands.
 
 ### The research question
 
-Randomized SVD comes with worst-case error bounds. In practice it usually does
-much better than the bound, sometimes exactly optimally, and occasionally fails
-outright - for numerical rather than statistical reasons.
+Randomized SVD comes with worst-case error bounds. In practice it usually does much better than the bound, sometimes exactly optimally, and occasionally fails outright - for numerical rather than statistical reasons.
 
-This project characterizes the actual behaviour: which spectral features predict
-the error, when each algorithmic variant is worth its cost, and where the
-floating-point limits bite. Every claim is a ratio to the Eckart–Young optimum,
+This project characterizes the actual behaviour: which spectral features predict the error, when each algorithmic variant is worth its cost, and where the floating-point limits bite. Every claim is a ratio to the Eckart–Young optimum,
 
-$$\min_{\operatorname{rank}(B)\le k}\|A-B\|_F = \Big(\sum_{i>k}\sigma_i^2\Big)^{1/2},$$
+$$\min_{\mathrm{rank}(B)\le k}\|A-B\|_F = \Big(\sum_{i>k}\sigma_i^2\Big)^{1/2},$$
 
-measured on matrices whose spectra are known exactly by construction rather than
-estimated. Nothing here is measured against another implementation.
+measured on matrices whose spectra are known exactly by construction rather than estimated. Nothing here is measured against another implementation.
 
-The output is a characterization rather than a single thesis: each result derived
-where a derivation exists, measured where it doesn't, and predicted in advance
-where possible.
+The output is a characterization rather than a single thesis: each result derived where a derivation exists, measured where it doesn't, and predicted in advance where possible.
 
 ### Project complementarity
 
-This repository supplies infrastructure and methods to
-[scalable-kernel-learning](https://github.com/daviddavilad/scalable-kernel-learning)
-- the prescribed-spectrum generator and the randomized range finder - but asks a
-different question.
+This repository supplies infrastructure and methods to [scalable-kernel-learning](https://github.com/daviddavilad/scalable-kernel-learning) - the prescribed-spectrum generator and the randomized range finder - but asks a different question.
 
 > **RNLA:** how well does a sketch reproduce a *matrix*?
 > **SKL:** how well does an approximation reproduce *predictions*?
-> **parallel-cg-ridge:** how do we scale the exact solve, without approximating
-> at all?
+> **parallel-cg-ridge:** how do we scale the exact solve, without approximating at all?
 
-The distinction between the first two is the point rather than a technicality.
-SKL's central claim is that matrix error is the wrong target for a learning
-problem: two approximations with equal spectral error can behave differently
-downstream. RNLA builds the instrument; SKL asks whether the instrument measures
-the right thing.
+The distinction between the first two is the point rather than a technicality. SKL's central claim is that matrix error is the wrong target for a learning problem: two approximations with equal spectral error can behave differently downstream. RNLA builds the instrument; SKL asks whether the instrument measures the right thing.
 
 ---
 
@@ -62,7 +45,7 @@ the right thing.
 | # | Hypothesis | Status | Falsification |
 |---|---|---|---|
 | **H1** | Error is governed by the local gap $\sigma_{k+1}/\sigma_k$. | **Rejected** | Two spectra with matched gaps (0.9048, 0.9070) gave 1.199 and 1.319. |
-| **H2** | Error is governed by effective tail dimension $\mathrm{sr}_{\text{tail}} = \left(\sum_{j>k}\sigma_j^2\right)/\sigma_{k+1}^2$; difficulty peaks where it is comparable to the sketch width $\ell$. | **Supported, not decisive** | A spectrum pair with matched $\mathrm{sr}_{\text{tail}}$ and different error. |
+| **H2** | Error is governed by effective tail dimension $$\mathrm{sr}_{\mathrm{tail}} = \Big(\sum_{j>k}\sigma_j^2\Big)\big/\sigma_{k+1}^2$$; difficulty peaks where it is comparable to the sketch width $\ell$. | **Supported, not decisive** | A spectrum pair with matched $\mathrm{sr}_{\text{tail}}$ and different error. |
 | **H3** | Flat spectra give ratio exactly 1 for every draw of $\Omega$. | **Proved and confirmed** | Any seed-to-seed variance, or ratio $\ne 1$. |
 | **H4** | Naive power iteration fails once $(\sigma_1/\sigma_\ell)^{2q+1}$ exceeds $1/\varepsilon$. | **Confirmed, predicted in advance** | Failure at a $q$ unrelated to that threshold. |
 | **H5** | Power iteration restores gap-monotonicity: at $q \ge 1$ the error curve is monotone in the gap. | **Observed at $q = 1, 2$** | An inversion at $q \ge 1$, or non-monotonicity returning at larger $q$. |
@@ -86,8 +69,7 @@ H2 is the central open claim. H6 is the next test.
 - Randomized SVD with oversampling (Halko–Martinsson–Tropp Alg. 4.1 / 5.1)
 - Power iteration with re-orthonormalization (HMT Alg. 4.4)
 - Randomized block Krylov (Musco & Musco 2015) - *next*
-- Orthogonalization: Householder QR; CholeskyQR, CholeskyQR2, shifted
-  CholeskyQR3, TSQR - *planned*
+- Orthogonalization: Householder QR; CholeskyQR, CholeskyQR2, shifted CholeskyQR3, TSQR - *planned*
 - Sketch operators: Gaussian; SRHT, sparse sign / CountSketch - *planned*
 
 **Diagnostics**
@@ -108,11 +90,9 @@ H2 is the central open claim. H6 is the next test.
 
 ### Out of scope
 
-- **Rewriting GEMM or QR from scratch.** Losing to OpenBLAS is not a result. The
-  contribution is algorithmic and empirical, not a BLAS reimplementation.
+- **Rewriting GEMM or QR from scratch.** Losing to OpenBLAS is not a result. The contribution is algorithmic and empirical, not a BLAS reimplementation.
 - **Competing with cuSOLVER on raw throughput.** Also not a result.
-- **Reimplementing RandLAPACK/RandBLAS.** A funded standardization effort already
-  exists (Murray et al. 2023); position beside it, not against it.
+- **Reimplementing RandLAPACK/RandBLAS.** A funded standardization effort already exists (Murray et al. 2023); position beside it, not against it.
 - **Sparse matrices.** Dense only, for now. A different set of bottlenecks.
 - **Non-symmetric eigenproblems.** Different project.
 
@@ -122,8 +102,7 @@ H2 is the central open claim. H6 is the next test.
 
 ### Test matrices
 
-$A = U\,\mathrm{diag}(\sigma)\,V^\top$ with Haar-random orthonormal $U, V$, so the
-spectrum is exactly as prescribed (verified to $2\times10^{-15}$).
+$A = U\,\mathrm{diag}(\sigma)\,V^\top$ with Haar-random orthonormal $U, V$, so the spectrum is exactly as prescribed (verified to $2\times10^{-15}$).
 
 | Spectrum | Form | Purpose |
 |---|---|---|
@@ -131,30 +110,22 @@ spectrum is exactly as prescribed (verified to $2\times10^{-15}$).
 | Exponential | $\sigma_i = e^{-\alpha i}$ | Fast decay; easy regime |
 | Flat | $\sigma_i = 1$ | Degenerate case with an exact closed-form answer |
 
-Current sweep: 11 spectra × 3 values of $q$ × 10 seeds, at $m = 300$, $n = 200$,
-$k = 20$, $p = 10$.
+Current sweep: 11 spectra × 3 values of $q$ × 10 seeds, at $m = 300$, $n = 200$, $k = 20$, $p = 10$.
 
 ### Metrics
 
-*Accuracy:* ratio to the Eckart–Young optimum (mean and max over seeds);
-$\|Q^\top Q - I\|_F$.
+*Accuracy:* ratio to the Eckart–Young optimum (mean and max over seeds); $\|Q^\top Q - I\|_F$.
 
-*Computational (not yet instrumented):* wall-clock separated by phase (sketch,
-orthogonalization, projection, small SVD); peak memory; passes over $A$; analytic
-FLOP count.
+*Computational (not yet instrumented):* wall-clock separated by phase (sketch, orthogonalization, projection, small SVD); peak memory; passes over $A$; analytic FLOP count.
 
-*Diagnostic:* $\sigma_{k+1}/\sigma_k$; $\mathrm{sr}_{\text{tail}}$; dynamic range
-$(\sigma_1/\sigma_\ell)^{2q+1}$.
+*Diagnostic:* $$\sigma_{k+1}/\sigma_k$$; $$\mathrm{sr}_{\mathrm{tail}}$$; dynamic range $$(\sigma_1/\sigma_\ell)^{2q+1}$$.
 
 ### Important research figures (deliverables)
 
-1. Ratio-to-optimal vs. gap, one line per $q$ - **the money plot.** If H5 holds,
-   $q\ge1$ curves are monotone where $q=0$ is not.
-2. Ratio-to-optimal vs. $\mathrm{sr}_{\text{tail}}$, families overlaid - the H2
-   plot. If H2 holds, the two families collapse onto one curve.
+1. Ratio-to-optimal vs. gap, one line per $q$ - **the money plot.** If H5 holds, $q\ge1$ curves are monotone where $q=0$ is not.
+2. Ratio-to-optimal vs. $\mathrm{sr}_{\text{tail}}$, families overlaid - the H2 plot. If H2 holds, the two families collapse onto one curve.
 3. Block Krylov vs. power iteration at matched passes over $A$ - the H6 plot.
-4. $\|Q^\top Q - I\|_F$ vs. $\kappa$, one line per orthogonalization scheme, with
-   the CholeskyQR breakdown marked - the H7 plot.
+4. $\|Q^\top Q - I\|_F$ vs. $\kappa$, one line per orthogonalization scheme, with the CholeskyQR breakdown marked - the H7 plot.
 5. Phase-wise runtime breakdown vs. $(m, n, k)$ - where the time actually goes.
 6. Accuracy per unit cost, all variants overlaid - the Pareto frontier.
 
@@ -173,26 +144,21 @@ CTest                 hand-rolled check()/close(), no framework yet
 clang-format          Google style
 ```
 
-Fortran symbols are declared by hand in `lapack.hpp` rather than pulled from a
-vendor header, because Accelerate/OpenBLAS/MKL share the Fortran ABI but ship
-conflicting C headers. This is why the Linux port required zero source changes.
+Fortran symbols are declared by hand in `lapack.hpp` rather than pulled from a vendor header, because Accelerate/OpenBLAS/MKL share the Fortran ABI but ship conflicting C headers. This is why the Linux port required zero source changes.
 
 ### CUDA (planned)
 
-Only after CPU profiling identifies a bottleneck. Custom kernels benchmarked
-against cuBLAS/cuSOLVER formulations, never as a replacement for them.
+Only after CPU profiling identifies a bottleneck. Custom kernels benchmarked against cuBLAS/cuSOLVER formulations, never as a replacement for them.
 
 ### Compute
 
 - **NVIDIA RTX 5060 Ti**, 16 GB - via WSL2, CUDA 13.0
 - **CARC** (carc.unm.edu) - for anything needing datacenter hardware or scale
-- **MacBook M2** for development; Accelerate uses the AMX coprocessor and is fast
-  for CPU work, but **no CUDA**
+- **MacBook M2** for development; Accelerate uses the AMX coprocessor and is fast for CPU work, but **no CUDA**
 
 ### Writing
 
-`derivations/` in GitHub-rendered Markdown so it reads in the browser. LaTeX
-reserved for a `paper/` directory if one is ever warranted.
+`derivations/` in GitHub-rendered Markdown so it reads in the browser. LaTeX reserved for a `paper/` directory if one is ever warranted.
 
 ---
 
@@ -232,8 +198,7 @@ randomized-numerical-linear-algebra/
 - Deterministic SVD attains the Eckart–Young optimum to machine precision.
 - Generated matrices have exactly the requested singular values.
 - Randomized methods never beat Eckart–Young (a theorem, so a strong bug detector).
-- Power iteration error is monotone decreasing in $q$ (guards the
-  re-orthonormalization).
+- Power iteration error is monotone decreasing in $q$ (guards the re-orthonormalization).
 
 ---
 
@@ -249,17 +214,13 @@ randomized-numerical-linear-algebra/
 | **5. Performance** | Phase-wise profiling, roofline analysis, then GPU only where the profiler points. | Figures 5 and 6. | Winter break |
 | **6. Write-up** | Consolidate derivations; decide whether a paper is warranted. | Repo readable end to end by a stranger. | Spring 2027 |
 
-**Note. No performance claims until a fair deterministic baseline exists.** The
-current `truncated_svd` computes the full SVD and discards the tail, which
-flatters every randomized method it is compared against.
+**Note. No performance claims until a fair deterministic baseline exists.** The current `truncated_svd` computes the full SVD and discards the tail, which flatters every randomized method it is compared against.
 
 ### Known debts
 
 - No timing instrumentation of any kind; every result so far is accuracy only.
 - `truncated_svd` is not a fair timing baseline (above).
-- Measurement floor at $\sim10^{-8}$ excess: the optimum is analytic, the achieved
-  error numerical, and below that scale they cross. Ratios under 1 appear and are
-  noise.
+- Measurement floor at $\sim10^{-8}$ excess: the optimum is analytic, the achieved error numerical, and below that scale they cross. Ratios under 1 appear and are noise.
 - Cross-platform agreement verified only to printed precision (4–5 decimals).
 - `orth` requires $m \ge n$; wide inputs unhandled.
 
@@ -269,62 +230,40 @@ flatters every randomized method it is compared against.
 
 ### Base understanding
 
-- **Halko, Martinsson & Tropp (2011)**, *Finding Structure with Randomness*, SIAM
-  Review. **The** reference; §4–5 are the algorithms implemented here, §10 the
-  oversampling analysis.
-- **Martinsson & Tropp (2020)**, *Randomized Numerical Linear Algebra: Foundations
-  and Algorithms*, Acta Numerica. The modern survey.
-- **Eckart & Young (1936)** / **Mirsky (1960)** - the optimality theorem every
-  measurement is relative to.
+- **Halko, Martinsson & Tropp (2011)**, *Finding Structure with Randomness*, SIAM Review. **The** reference; §4–5 are the algorithms implemented here, §10 the oversampling analysis.
+- **Martinsson & Tropp (2020)**, *Randomized Numerical Linear Algebra: Foundations and Algorithms*, Acta Numerica. The modern survey.
+- **Eckart & Young (1936)** / **Mirsky (1960)** - the optimality theorem every measurement is relative to.
 
 ### Core readings
 
-- **Musco & Musco (2015)**, *Randomized Block Krylov Methods for Stronger and
-  Faster Approximate SVD*, NIPS. **Next implementation.**
-- **Tropp, Yurtsever, Udell & Cevher (2017)**, *Practical Sketching Algorithms for
-  Low-Rank Matrix Approximation*, SIMAX. Single-pass methods.
-- **Clarkson & Woodruff (2013)**, *Low-Rank Approximation and Regression in Input
-  Sparsity Time*, STOC. Sparse sketching.
-- **Frangella, Tropp & Udell (2023)**, *Randomized Nyström Preconditioning*,
-  SIMAX. **The bridge to MATH 471 and to Prof. Schroder's interests.**
-- **Murray et al. (2023)**, *Randomized Numerical Linear Algebra: A Perspective on
-  the Field with an Eye to Software*. Know what already exists.
+- **Musco & Musco (2015)**, *Randomized Block Krylov Methods for Stronger and Faster Approximate SVD*, NIPS. **Next implementation.**
+- **Tropp, Yurtsever, Udell & Cevher (2017)**, *Practical Sketching Algorithms for Low-Rank Matrix Approximation*, SIMAX. Single-pass methods.
+- **Clarkson & Woodruff (2013)**, *Low-Rank Approximation and Regression in Input Sparsity Time*, STOC. Sparse sketching.
+- **Frangella, Tropp & Udell (2023)**, *Randomized Nyström Preconditioning*, SIMAX. **The bridge to MATH 471 and to Prof. Schroder's interests.**
+- **Murray et al. (2023)**, *Randomized Numerical Linear Algebra: A Perspective on the Field with an Eye to Software*. Know what already exists.
 
 ### Background
 
 - **Golub & Van Loan**, *Matrix Computations*, chs. 5, 8, 10.
 - **Higham**, *Accuracy and Stability of Numerical Algorithms*, chs. 19–20.
 - **Fukaya et al. (2020)**, *Shifted CholeskyQR3*. For the orthogonalization phase.
-- **Demmel et al. (2012)**, *Communication-Avoiding Parallel and Sequential QR*.
-  TSQR; also relevant to MATH 471.
+- **Demmel et al. (2012)**, *Communication-Avoiding Parallel and Sequential QR*. TSQR; also relevant to MATH 471.
 
 ---
 
 ## 9. Open questions
 
-This project is self-directed, so this section holds questions to resolve rather
-than questions for an advisor.
+This project is self-directed, so this section holds questions to resolve rather than questions for an advisor.
 
-1. **Is $\mathrm{sr}_{\text{tail}}$ actually the right variable, or is it a proxy?**
-   H2 is supported but not decisive. A spectrum pair with matched
-   $\mathrm{sr}_{\text{tail}}$ and different error would settle it either way.
-2. **Where does block Krylov stop being worth its memory?** $(q{+}1)\ell$ columns
-   rather than $\ell$. At what $q$ and what spectrum does the accuracy gain stop
-   paying for the storage?
-3. **Does the $q=0$ non-monotonicity have a closed form?** The flat case was
-   derivable exactly. Whether the peak location is predictable from the spectrum
-   is unknown.
-4. **Worth raising with Prof. Schroder:** randomized Nyström preconditioning sits
-   at the intersection of this repo, the MATH 471 solver, and his own work on
-   randomization and multigrid. Best entry point for a supervised extension.
+1. **Is $\mathrm{sr}_{\text{tail}}$ actually the right variable, or is it a proxy?** H2 is supported but not decisive. A spectrum pair with matched $\mathrm{sr}_{\text{tail}}$ and different error would settle it either way.
+2. **Where does block Krylov stop being worth its memory?** $(q{+}1)\ell$ columns rather than $\ell$. At what $q$ and what spectrum does the accuracy gain stop paying for the storage?
+3. **Does the $q=0$ non-monotonicity have a closed form?** The flat case was derivable exactly. Whether the peak location is predictable from the spectrum is unknown.
+4. **Worth raising with Prof. Schroder:** randomized Nyström preconditioning sits at the intersection of this repo, the MATH 471 solver, and his own work on randomization and multigrid. Best entry point for a supervised extension.
 
 ---
 
 ## 10. Next task
 
-Implement randomized block Krylov (Musco & Musco 2015) and compare against power
-iteration **at matched passes over $A$** - the only fair axis, since block Krylov
-buys accuracy with memory rather than with additional passes.
+Implement randomized block Krylov (Musco & Musco 2015) and compare against power iteration **at matched passes over $A$** - the only fair axis, since block Krylov buys accuracy with memory rather than with additional passes.
 
-Prediction to record before running: gap-independence should manifest as a
-*flatter* error curve across gaps, not a uniform downward shift.
+Prediction to record before running: gap-independence should manifest as a *flatter* error curve across gaps, not a uniform downward shift.
