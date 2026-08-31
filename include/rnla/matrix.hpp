@@ -34,4 +34,7 @@ class Matrix {
 // C = op(A) * op(B), where op(X) is X or X^T.
 Matrix matmul(const Matrix& A, const Matrix& B, bool transA = false, bool transB = false);
 
+// Copies src into dst starting at column col_offset.
+void set_block(Matrix& dst, const Matrix& src, int col_offset);
+
 }  // namespace rnla

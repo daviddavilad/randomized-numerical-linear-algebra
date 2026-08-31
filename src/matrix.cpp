@@ -24,4 +24,16 @@ Matrix matmul(const Matrix& A, const Matrix& B, bool transA, bool transB) {
   return C;
 }
 
+void set_block(Matrix& dst, const Matrix& src, int col_offset) {
+  assert(dst.rows() == src.rows());
+  assert(col_offset >= 0 && col_offset + src.cols() <= dst.cols());
+
+  // Copy, j outer over src.cols(), i inner over src.rows()
+  for (int j = 0; j < src.cols(); ++j) {
+    for (int i = 0; i < src.rows(); ++i) {
+      dst(i, col_offset + j) = src(i, j);
+    }
+  }
+}
+
 }  // namespace rnla

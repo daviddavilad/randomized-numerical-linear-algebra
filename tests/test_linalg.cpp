@@ -157,6 +157,21 @@ void test_power_iteration_monotone() {
   }
 }
 
+void test_krylov_matches_rsvd_at_q0() {
+  const int m = 300, n = 200, k = 20, p = 10;
+  auto tm = rnla::make_test_matrix(m, n, rnla::Spectrum::Polynomial, 2.0, 7);
+  const double optimal = rnla::eckart_young_fro(tm.sigma, k);
+
+  auto a = rnla::randomized_svd(tm.A, k, p, 0, 42);
+  auto b = rnla::randomized_svd_krylov(tm.A, k, p, 0, 42);
+
+  const double ra = rnla::reconstruction_error(tm.A, a) / optimal;
+  const double rb = rnla::reconstruction_error(tm.A, b) / optimal;
+
+  std::printf("    q=0: rsvd %.12f  krylov %.12f\n", ra, rb);
+  check(close(ra, rb, 1e-12), "krylov reduces to rsvd at q=0");
+}
+
 }  // namespace
 
 int main() {
@@ -169,6 +184,7 @@ int main() {
   test_spectrum_is_exact();
   test_rsvd_ratio();
   test_power_iteration_monotone();
+  test_krylov_matches_rsvd_at_q0();
   std::printf("%s (%d failures)\n", failures ? "FAILED" : "OK", failures);
   return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }

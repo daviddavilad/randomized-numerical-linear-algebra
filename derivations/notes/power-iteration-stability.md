@@ -1,4 +1,4 @@
-# Power iteration: gap amplification and its numerical cost
+# Power iteration - gap amplification and its numerical cost
 
 *Derived 2026-08-21. The crossover table was worked out from the spectrum
 before re-running the benchmark.*
