@@ -36,7 +36,7 @@ int main() {
       {rnla::Spectrum::Flat,       "flat", 0.0},
   };
 
-  std::printf("%-6s %6s %8s %10s %12s %12s %12s\n", "family", "alpha", "gap", "opt_rel", "q=0", "q=1", "q=2");
+  std::printf("%-6s %6s %8s %10s %12s %12s %12s %12s\n", "family", "alpha", "gap", "opt_rel", "pi q=0", "pi q=1", "pi q=2", "bk q=1");
 
   for (const Case& c : cases) {
     auto tm = rnla::make_test_matrix(m, n, c.kind, c.alpha, 7);
@@ -55,7 +55,16 @@ int main() {
       means[q] = std::accumulate(ratios.begin(), ratios.end(), 0.0) / ratios.size();
     }
 
-    std::printf("%-6s %6.1f %8.4f %10.2e %12.9f %12.9f %12.9f\n", c.label, c.alpha, gap, opt_rel, means[0], means[1], means[2]);
+    std::vector<double> kr;
+    for (int seed = 0; seed < n_seeds; ++seed) {
+      auto svd = rnla::randomized_svd_krylov(tm.A, k, p, 1, seed);
+      kr.push_back(rnla::reconstruction_error(tm.A, svd) / optimal);
+    }
+    const double krylov_q1 =
+        std::accumulate(kr.begin(), kr.end(), 0.0) / kr.size();
+
+    std::printf("%-6s %6.1f %8.4f %10.2e %12.9f %12.9f %12.9f %12.9f\n", c.label, c.alpha, gap, opt_rel, means[0], means[1], means[2], krylov_q1);
   }
+
   return 0;
 }

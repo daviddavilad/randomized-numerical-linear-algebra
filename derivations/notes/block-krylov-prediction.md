@@ -43,4 +43,35 @@ in $\mathrm{range}(A)$.
 
 ## Outcome
 
-*To be filled after measurement.*
+Mean excess over optimal, 10 seeds, $`m=300`$, $`n=200`$, $`k=20`$, $`p=10`$.
+Both methods at $`q=1`$ - three passes over $`A`$ either way.
+
+| spectrum | gap | $`\mathrm{sr}_\mathrm{tail}`$ | power iter. | block Krylov | factor |
+|---|---|---|---|---|---|
+| poly 3.0 | 0.8638 | 4.72 | 1.49e-4 | 3.70e-6 | 40× |
+| exp 0.1 | 0.9048 | 5.52 | 5.20e-4 | 1.90e-6 | 274× |
+| poly 2.0 | 0.9070 | 7.51 | 1.15e-3 | 1.34e-4 | 8.6× |
+| poly 1.5 | 0.9294 | 10.90 | 3.02e-3 | 6.68e-4 | 4.5× |
+| poly 1.0 | 0.9524 | 19.31 | 7.24e-3 | 2.61e-3 | 2.8× |
+| poly 0.5 | 0.9759 | 47.89 | 1.55e-2 | 6.32e-3 | 2.4× |
+
+Block Krylov wins on every row. **The prediction is rejected**: across the
+polynomial rows the power-iteration excess spans 104×, the block Krylov excess
+spans 1708×. The curve got *steeper*, not flatter, and the improvement shrinks
+monotonically as the problem gets harder.
+
+The improvement factor is not a function of the gap or of
+$`\mathrm{sr}_\mathrm{tail}`$: exp 0.1 ($`\mathrm{sr}_\mathrm{tail} = 5.52`$)
+improves 274× while poly 3.0 ($`\mathrm{sr}_\mathrm{tail} = 4.72`$) improves 40×.
+Same shape of family anomaly that rejected H1.
+
+## Prediction error
+
+The mistake was in the prediction, not in the theorem. Musco & Musco's
+gap-independence is a statement about **iteration count to reach a target
+$`\varepsilon`$** - block Krylov needs $`q = O(1/\sqrt{\varepsilon})`$ where
+power iteration needs $`O(1/\varepsilon)`$, and neither bound involves the gap.
+It says nothing about error at *fixed* $`q`$, which is what was measured here.
+
+Testing the actual claim requires fixing a target error and measuring the $`q`$
+each method needs to reach it. Follow-up item for the future.

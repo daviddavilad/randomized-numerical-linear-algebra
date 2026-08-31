@@ -172,6 +172,22 @@ void test_krylov_matches_rsvd_at_q0() {
   check(close(ra, rb, 1e-12), "krylov reduces to rsvd at q=0");
 }
 
+void test_krylov_monotone() {
+  const int m = 300, n = 200, k = 20, p = 10;
+  auto tm = rnla::make_test_matrix(m, n, rnla::Spectrum::Polynomial, 2.0, 7);
+  const double optimal = rnla::eckart_young_fro(tm.sigma, k);
+
+  std::printf("  block Krylov, poly alpha=2.0:\n");
+  double prev = 0.0;
+  for (int q = 0; q <= 3; ++q) {
+    auto svd = rnla::randomized_svd_krylov(tm.A, k, p, q, 42);
+    const double ratio = rnla::reconstruction_error(tm.A, svd) / optimal;
+    std::printf("    q=%d  ratio = %.9f\n", q, ratio);
+    if (q > 0) check(ratio <= prev, "block Krylov is monotone in q");
+    prev = ratio;
+  }
+}
+
 }  // namespace
 
 int main() {
@@ -185,6 +201,7 @@ int main() {
   test_rsvd_ratio();
   test_power_iteration_monotone();
   test_krylov_matches_rsvd_at_q0();
+  test_krylov_monotone();
   std::printf("%s (%d failures)\n", failures ? "FAILED" : "OK", failures);
   return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
