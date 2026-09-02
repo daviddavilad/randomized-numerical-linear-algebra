@@ -1,8 +1,8 @@
 # RNLA Project Map - Randomized Low-Rank Approximation
 
-**Status:** V1 complete. Accuracy characterized; performance work not started.
+**Status:** V2 complete. Block Krylov measured; performance work not started.
 **Author:** David Dávila
-**Date:** 29 Aug 2026
+**Date:** 1 Sep 2026
 
 ---
 
@@ -49,11 +49,11 @@ The distinction between the first two is the point rather than a technicality. S
 | **H3** | Flat spectra give ratio exactly 1 for every draw of $\Omega$. | **Proved and confirmed** | Any seed-to-seed variance, or ratio $\ne 1$. |
 | **H4** | Naive power iteration fails once $(\sigma_1/\sigma_\ell)^{2q+1}$ exceeds $1/\varepsilon$. | **Confirmed, predicted in advance** | Failure at a $q$ unrelated to that threshold. |
 | **H5** | Power iteration restores gap-monotonicity: at $q \ge 1$ the error curve is monotone in the gap. | **Observed at $q = 1, 2$** | An inversion at $q \ge 1$, or non-monotonicity returning at larger $q$. |
-| **H6** | Block Krylov's gap-independent bound shows up empirically as a *flatter* error curve across gaps, not a uniform downward shift. | **Open - V2** | Block Krylov improves all gaps by a constant factor. |
+| **H6** | Block Krylov's gap-independent bound shows up empirically as a *flatter* error curve across gaps. | **Rejected** | The spread across polynomial rows widened from 104× to 1708×; the improvement shrinks as the gap approaches 1. The prediction mistranslated the theorem - see `notes/block-krylov-prediction.md`. |
 | **H7** | CholeskyQR2 recovers Householder-quality orthogonality at substantially lower cost, up to a predictable conditioning threshold. | **Open - V3** | CholeskyQR2 fails where CholeskyQR does, or shows no speed advantage. |
 | **H8** | Sketch operator choice (Gaussian / SRHT / sparse sign) changes cost but not accuracy, outside pathological spectra. | **Open - V4** | Measurable accuracy differences at matched $\ell$. |
 
-H2 is the central open claim. H6 is the next test.
+H2 is the central open claim. H7 is the next test.
 
 ---
 
@@ -68,8 +68,8 @@ H2 is the central open claim. H6 is the next test.
 **Algorithms**
 - Randomized SVD with oversampling (Halko–Martinsson–Tropp Alg. 4.1 / 5.1)
 - Power iteration with re-orthonormalization (HMT Alg. 4.4)
-- Randomized block Krylov (Musco & Musco 2015) - *next*
-- Orthogonalization: Householder QR; CholeskyQR, CholeskyQR2, shifted CholeskyQR3, TSQR - *planned*
+- Randomized block Krylov (Musco & Musco 2015)
+- Orthogonalization: Householder QR; CholeskyQR, CholeskyQR2, shifted CholeskyQR3, TSQR - *next*
 - Sketch operators: Gaussian; SRHT, sparse sign / CountSketch - *planned*
 
 **Diagnostics**
@@ -110,7 +110,7 @@ $A = U\,\mathrm{diag}(\sigma)\,V^\top$ with Haar-random orthonormal $U, V$, so t
 | Exponential | $\sigma_i = e^{-\alpha i}$ | Fast decay; easy regime |
 | Flat | $\sigma_i = 1$ | Degenerate case with an exact closed-form answer |
 
-Current sweep: 11 spectra × 3 values of $q$ × 10 seeds, at $m = 300$, $n = 200$, $k = 20$, $p = 10$.
+Current sweep: 11 spectra × 10 seeds at $`m = 300`$, $`n = 200`$, $`k = 20`$, $`p = 10`$ - power iteration at $`q = 0, 1, 2`$ and block Krylov at $`q = 1`$.
 
 ### Metrics
 
@@ -189,7 +189,8 @@ randomized-numerical-linear-algebra/
 │   └── notes/                      # standalone results from experiments
 │       ├── flat-spectrum-exact.md
 │       ├── power-iteration-stability.md
-│       └── power-iteration-gap-lookup.md
+│       ├── power-iteration-gap-lookup.md
+│       └── block-krylov-prediction.md
 └── docs/
     └── project-map.md
 ```
@@ -259,11 +260,12 @@ This project is self-directed, so this section holds questions to resolve rather
 2. **Where does block Krylov stop being worth its memory?** $(q{+}1)\ell$ columns rather than $\ell$. At what $q$ and what spectrum does the accuracy gain stop paying for the storage?
 3. **Does the $q=0$ non-monotonicity have a closed form?** The flat case was derivable exactly. Whether the peak location is predictable from the spectrum is unknown.
 4. **Worth raising with Prof. Schroder:** randomized Nyström preconditioning sits at the intersection of this repo, the MATH 471 solver, and his own work on randomization and multigrid. Best entry point for a supervised extension.
+5. **What would actually test Musco–Musco?** Their gap-independence concerns the iteration count needed to reach a target $`\varepsilon`$, not the error at fixed $`q`$. Invert the benchmark: fix a target ratio (say 1.001), and for each spectrum report the smallest $`q`$ at which each method reaches it. Gap-independence predicts block Krylov's required $`q`$ is roughly constant across spectra while power iteration's grows as the gap approaches 1.
 
 ---
 
 ## 10. Next task
 
-Implement randomized block Krylov (Musco & Musco 2015) and compare against power iteration **at matched passes over $A$** - the only fair axis, since block Krylov buys accuracy with memory rather than with additional passes.
+Implement CholeskyQR and CholeskyQR2 as alternatives to Householder QR in `orth`, and measure $`\|Q^\top Q - I\|_F`$ against $`\kappa(Y)`$ for each.
 
-Prediction to record before running: gap-independence should manifest as a *flatter* error curve across gaps, not a uniform downward shift.
+CholeskyQR is three BLAS-3 operations against Householder's sequential reflector sweep, but it forms $`Y^\top Y`$ and so squares the condition number. Prediction to record before running: plain CholeskyQR loses orthogonality once $`\kappa(Y) > \varepsilon^{-1/2} \approx 10^8`$, and CholeskyQR2 recovers machine-precision orthogonality up to roughly that same threshold.

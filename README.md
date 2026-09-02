@@ -28,6 +28,8 @@ which counts how many directions the tail effectively occupies. Both extremes ar
 
 A second finding follows, and is arguably the more useful one: **power iteration changes which variable governs the error.** At $q = 0$ the curve is non-monotonic in the gap; at $q \ge 1$ it is monotone increasing, with both spectral families interleaving in gap order. The non-monotonic structure is a $q = 0$ phenomenon.
 
+A third result, from comparing algorithms rather than spectra: **block Krylov beats power iteration at matched passes over $A$ on every spectrum tested**, by 2.4× to 274× in excess error. But the improvement shrinks as the problem gets harder rather than flattening the error curve - the spread across polynomial spectra widened from 104× to 1708×. The prediction that gap-independence would compress the curve was rejected; it had mistranslated a claim about iteration count as a claim about error at fixed $q$.
+
 ## Methodology
 
 Every result is a **ratio to the Eckart–Young optimum**, not an absolute error. Test matrices are built as $A = U\,\mathrm{diag}(\sigma)\,V^\top$ with Haar-random orthonormal factors, so the spectrum is exactly as prescribed (verified to $2\times10^{-15}$) and the optimum
@@ -40,7 +42,7 @@ The comparison set:
 
 - Randomized SVD with oversampling $p$ (HMT Alg. 4.1 / 5.1)
 - Power iteration with re-orthonormalization, $q$ passes (HMT Alg. 4.4)
-- Randomized block Krylov (Musco & Musco) - *next*
+- Randomized block Krylov (Musco & Musco)
 - Deterministic truncated SVD via LAPACK `dgesdd` as ground truth
 
 Spectra are polynomial ($\sigma_i = (i+1)^{-\alpha}$), exponential ($\sigma_i = e^{-\alpha i}$), and flat, swept across $\alpha$ so that the gap and the tail dimension take a range of values across both families.
@@ -127,13 +129,13 @@ Benchmarks are deliberately not CTest targets. Tests assert; benchmarks report.
 
 ## Status and roadmap
 
-V1 complete as of Aug 2026: randomized SVD with oversampling and stable power iteration, characterized across 11 spectra × 3 values of $q$ × 10 seeds. Full plan, hypotheses, and known debts in [`docs/project-map.md`](docs/project-map.md).
+V2 complete as of Sep 2026: randomized SVD with oversampling and stable power iteration, characterized across 11 spectra × 3 values of $q$ × 10 seeds. Full plan, hypotheses, and known debts in [`docs/project-map.md`](docs/project-map.md).
 
 | Phase | Content | Target deliverable | Date |
 |---|---|---|---|
 | **0. Foundation** | Matrix type, LAPACK bindings, two-platform build. | Clean build on macOS and Linux. | Aug 2026 |
 | **1. Baseline and rSVD** | Truncated SVD, `orth`, Gaussian sketch, spectrum generator, rSVD with oversampling and power iteration. | **H1–H5 tested.** Spectrum sweep. | Aug 2026 |
-| **2. Block Krylov** | Musco–Musco; comparison at matched passes over $A$. | **H6 tested.** | September |
+| **2. Block Krylov** | Musco–Musco; comparison at matched passes over $A$. | **H6 tested - rejected.** | Sep 2026 |
 | **3. Orthogonalization** | CholeskyQR / CholeskyQR2 / shifted CholeskyQR3 / TSQR. | **H7 tested.** | October |
 | **4. Sketch operators** | SRHT, sparse sign; first timing harness. | **H8 tested.** | November |
 | **5. Performance** | Profiling, roofline, GPU where the profiler points. | Runtime breakdown. | Winter break |
