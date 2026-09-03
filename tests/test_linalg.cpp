@@ -188,6 +188,17 @@ void test_krylov_monotone() {
   }
 }
 
+void test_cholesky_qr_well_conditioned() {
+  rnla::Matrix G = rnla::gaussian(200, 30, 12345);
+  rnla::Matrix Qh = rnla::orth(G);
+  rnla::Matrix Qc = rnla::cholesky_qr(G);
+
+  const double eh = rnla::orthogonality_error(Qh);
+  const double ec = rnla::orthogonality_error(Qc);
+  std::printf("    householder %.3e   choleskyqr %.3e\n", eh, ec);
+  check(ec < 1e-13, "CholeskyQR orthonormal on well-conditioned input");
+}
+
 }  // namespace
 
 int main() {
@@ -202,6 +213,7 @@ int main() {
   test_power_iteration_monotone();
   test_krylov_matches_rsvd_at_q0();
   test_krylov_monotone();
+  test_cholesky_qr_well_conditioned();
   std::printf("%s (%d failures)\n", failures ? "FAILED" : "OK", failures);
   return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -62,4 +62,28 @@ void dorgqr_(
     int* info
 );
 
+// Cholesky factorization: A = L * L^T or A = U^T * U.
+void dpotrf_(
+    const char* uplo,
+    const int* n,
+    double* a,
+    const int* lda,
+    int* info
+);
+
+// Solves a triangular system of equations with multiple right-hand sides: A * X = B or A^T * X = B.
+void dtrsm_(
+    const char* side,
+    const char* uplo,
+    const char* transa,
+    const char* diag,
+    const int* m,
+    const int* n,
+    const double* alpha,
+    const double* a,
+    const int* lda,
+    double* b,
+    const int* ldb
+);
+
 }

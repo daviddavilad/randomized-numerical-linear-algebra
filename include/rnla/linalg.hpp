@@ -22,6 +22,14 @@ std::vector<double> singular_values(const Matrix& A);
 // Assumes A has full column rank.
 Matrix orth(const Matrix& A);
 
+// Orthonormal basis for the column space of A via CholeskyQR:
+//   G = A^T A,  G = R^T R,  Q = A R^{-1}
+// Three BLAS-3 operations, far more parallel than Householder QR — but it
+// forms the Gram matrix, so the Cholesky sees cond(A)^2 and the method fails
+// once cond(A) exceeds about eps^{-1/2} ~ 1e8.
+// Throws if the Gram matrix is not numerically positive definite.
+Matrix cholesky_qr(const Matrix& A);
+
 // ||Q^T Q - I||_F. Measures how far Q is from having orthonormal columns.
 double orthogonality_error(const Matrix& Q);
 

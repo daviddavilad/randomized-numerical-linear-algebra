@@ -142,6 +142,39 @@ Matrix orth(const Matrix& A) {
   return Q;
 }
 
+Matrix cholesky_qr(const Matrix& A) {
+  const int m = A.rows();
+  const int n = A.cols();
+  if (m < n)
+    throw std::invalid_argument("cholesky_qr requires m >= n");
+  
+  Matrix G = matmul(A, A, true, false);   // A^T A, n x n
+  const int ldg = G.ld();
+
+  const char uplo = 'U';
+  int info = 0;
+  dpotrf_(&uplo, &n, G.data(), &ldg, &info);
+
+  if (info < 0)
+    throw std::runtime_error("dpotrf: invalid argument " + std::to_string(-info));
+  if (info > 0)
+    throw std::runtime_error(
+        "cholesky_qr: Gram matrix lost positive definiteness at leading minor " +
+        std::to_string(info) + " — cond(A) likely exceeds eps^{-1/2}");
+
+  Matrix Q = A;   // copy: A is const, and dtrsm overwrites its operand
+
+  // Q = Q * R^{-1}, i.e. solve X * R = Q for X
+  const char side = 'R';
+  const char trans = 'N';
+  const char diag = 'N';
+  const double alpha = 1.0;
+  const int ldq = Q.ld();
+  dtrsm_(&side, &uplo, &trans, &diag, &m, &n, &alpha, G.data(), &ldg, Q.data(), &ldq);
+
+  return Q;
+}
+
 double norm_fro(const Matrix& A) {
   double acc = 0.0;
   // Accumulate squares of every entry, j outer
