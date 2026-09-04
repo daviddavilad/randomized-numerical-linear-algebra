@@ -70,8 +70,79 @@ Prediction 4 is also slightly off: at $`\kappa = 10^8`$ the factorization does n
 
 The leading minor at which `dpotrf` breaks down (25 at $`\kappa=10^{10}`$, 22 at $`10^{12}`$) moves earlier with worse conditioning, giving a rough proxy for how far past the edge the input sits.
 
-## Next: CholeskyQR2
+## CholeskyQR2
 
-Running the algorithm twice - $`Q_1 = \mathrm{cholqr}(A)`$, then $`Q = \mathrm{cholqr}(Q_1)`$ - is claimed to restore machine-precision orthogonality for $`\kappa(A)`$ up to roughly $`\varepsilon^{-1/2}`$.
+Running the algorithm twice - $`Q_1 = \mathrm{cholqr}(A)`$, then
+$`Q = \mathrm{cholqr}(Q_1)`$ - is claimed to restore machine-precision
+orthogonality for $`\kappa(A)`$ up to roughly $`\varepsilon^{-1/2}`$.
 
-The mechanism to verify before measuring: $`Q_1`$ is not orthonormal, but its *conditioning* is far better than $`A`$'s. If $`\kappa(Q_1) = O(1)`$ whenever the first pass completes at all, the second pass is a well-conditioned problem and returns machine precision. The open question is whether $`\kappa(Q_1)`$ tracks.
+Before measuring, the open question was what $`\kappa(Q_1)`$ actually is. One
+candidate: it tracks $`\varepsilon\kappa(A)^2`$, which would limit CholeskyQR2
+to $`\kappa \lesssim 10^4`$ here. That guess was wrong, and the correct
+mechanism is why the method reaches $`10^8`$.
+
+### Mechanism
+
+Write $`Q_1^\top Q_1 = I + E`$ with $`\|E\| \approx c\,\varepsilon\,\kappa(A)^2`$
+from the law above. The singular values of $`Q_1`$ are the square roots of the
+eigenvalues of $`Q_1^\top Q_1`$, which lie in $`[1-\|E\|,\, 1+\|E\|]`$, so
+
+$$\kappa(Q_1) \;\le\; \sqrt{\frac{1+\|E\|}{1-\|E\|}} \;\approx\; 1 + \|E\|
+\quad\text{for small } \|E\| .$$
+
+The first pass does not reduce the conditioning *proportionally*, it collapses
+it to within $`\|E\|`$ of one. That is the whole trick. Feeding
+$`\kappa(Q_1)\approx 1`$ back through the error law gives a second-pass error of
+$`0.1\,\varepsilon`$, i.e. machine precision, regardless of how bad $`\kappa(A)`$
+was.
+
+### Measured
+
+| $`\kappa(A)`$ | cholqr | $`\kappa(Q_1)`$ | cholqr2 | Householder |
+|---|---|---|---|---|
+| 1e2 | 6.52e-13 | 1.00 | 2.94e-15 | 2.63e-15 |
+| 1e4 | 2.54e-09 | 1.00 | 3.06e-15 | 4.13e-15 |
+| 1e6 | 2.06e-05 | 1.00 | 2.50e-15 | 3.49e-15 |
+| 1e7 | 1.07e-03 | 1.00 | 2.77e-15 | 4.09e-15 |
+| 1e8 | 1.52e-01 | 1.09 | 2.71e-15 | 2.68e-15 |
+| 1e10 | fails | — | — | 3.20e-15 |
+
+$`\kappa(Q_1)`$ is 1 to three digits across four decades, reaching only 1.09 at
+$`\kappa(A)=10^8`$ where $`\|E\|=0.15`$. The bound predicts
+$`\sqrt{1.152/0.848}=1.17`$ there; measured 1.09, consistent with an upper
+bound.
+
+CholeskyQR2 matches Householder to within a factor of 1.2 at every conditioning
+where it runs at all, including the row where the first pass returns
+$`1.5\times10^{-1}`$, i.e. nothing usable.
+
+### What the threshold actually governs
+
+The $`\varepsilon^{-1/2}`$ figure is the right limit for CholeskyQR2, but not
+for the usual reason. It is not that error stays small below it - the first
+pass's error is $`0.1\,\varepsilon\kappa^2`$ throughout and reaches $`10^{-1}`$
+at the boundary. It is that the **Cholesky factorization still completes**
+below it. Past $`\kappa \approx 10^{10}`$ the Gram matrix is numerically
+indefinite, `dpotrf` fails, and there is no $`Q_1`$ to refine.
+
+CholeskyQR2's limit is therefore a limit on *survival of the first pass*, not on
+accuracy.
+
+### Status of H7
+
+The accuracy half is confirmed, and a little bit more nuanced: not "recovers
+Householder-quality orthogonality" but "matches it to within a factor of 1.2,
+everywhere it runs."
+
+The cost half is still **unmeasured**. There is no timing harness in the repository,
+so "at substantially lower cost" remains a claim from the literature rather than
+a result from this work. CholeskyQR2 is two GEMMs, two Choleskys and two
+triangular solves against one Householder sweep - plausibly faster on parallel
+hardware, but that is yet to be measured.
+
+### Next
+
+Shifted CholeskyQR3 (Fukaya et al. 2020) adds a diagonal shift
+$`G + s I`$ to keep the Gram matrix positive definite past the point where plain
+CholeskyQR dies, at the cost of a third pass. The $`\kappa \ge 10^{10}`$ rows
+are where it would earn its keep.

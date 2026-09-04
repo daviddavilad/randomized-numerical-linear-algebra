@@ -30,6 +30,12 @@ Matrix orth(const Matrix& A);
 // Throws if the Gram matrix is not numerically positive definite.
 Matrix cholesky_qr(const Matrix& A);
 
+// CholeskyQR applied twice. The first pass leaves Q1 with
+// ||Q1^T Q1 - I|| ~ eps*cond(A)^2, which makes cond(Q1) close to 1 whenever
+// that quantity is below 1 — so the second pass is well-conditioned and
+// returns machine-precision orthogonality.
+Matrix cholesky_qr2(const Matrix& A);
+
 // ||Q^T Q - I||_F. Measures how far Q is from having orthonormal columns.
 double orthogonality_error(const Matrix& Q);
 

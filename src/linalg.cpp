@@ -175,6 +175,12 @@ Matrix cholesky_qr(const Matrix& A) {
   return Q;
 }
 
+Matrix cholesky_qr2(const Matrix& A) {
+  Matrix Q1 = cholesky_qr(A);
+  Matrix Q2 = cholesky_qr(Q1);
+  return Q2;
+}
+
 double norm_fro(const Matrix& A) {
   double acc = 0.0;
   // Accumulate squares of every entry, j outer

@@ -10,9 +10,7 @@ int main() {
   const int m = 200, n = 30;
   const double kappas[] = {1e2, 1e4, 1e6, 1e7, 1e8, 1e10, 1e12};
 
-    
-  std::printf("%10s %12s %12s %14s %14s\n", "kappa", "kappa_act", "kappa^2", "householder", "choleskyqr");
-
+  std::printf("%10s %12s %12s %14s %14s %12s %14s\n", "kappa", "kappa_act", "kappa^2", "householder", "cholqr", "cond(Q1)", "cholqr2");
   for (double kappa : kappas) {
     // exponential spectrum over r = min(m,n) values has
     //   kappa = sigma_0 / sigma_{r-1} = e^{alpha(r-1)}
@@ -27,8 +25,12 @@ int main() {
     //       print the error on success, "FAILED" on catch.
     double ec = 0.0;
     try {
-      ec = rnla::orthogonality_error(rnla::cholesky_qr(tm.A));
-      std::printf("%10.2e %12.2e %12.2e %14.2e %14.2e\n", kappa, kappa_actual, kappa * kappa, eh, ec);
+      rnla::Matrix Q1 = rnla::cholesky_qr(tm.A);
+      ec = rnla::orthogonality_error(Q1);
+      auto s1 = rnla::singular_values(Q1);
+      const double kappa_q1 = s1.front() / s1.back();
+      const double ec2 = rnla::orthogonality_error(rnla::cholesky_qr(Q1));
+      std::printf("%10.2e %12.2e %12.2e %14.2e %14.2e %12.2e %14.2e\n", kappa, kappa_actual, kappa * kappa, eh, ec, kappa_q1, ec2);
     } catch (const std::exception& e) {
       std::printf("%10.2e %12.2e %12.2e %14.2e   FAILED: %s\n", kappa, kappa_actual, kappa * kappa, eh, e.what());
     }
