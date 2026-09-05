@@ -50,10 +50,10 @@ The distinction between the first two is the point rather than a technicality. S
 | **H4** | Naive power iteration fails once $(\sigma_1/\sigma_\ell)^{2q+1}$ exceeds $1/\varepsilon$. | **Confirmed, predicted in advance** | Failure at a $q$ unrelated to that threshold. |
 | **H5** | Power iteration restores gap-monotonicity: at $q \ge 1$ the error curve is monotone in the gap. | **Observed at $q = 1, 2$** | An inversion at $q \ge 1$, or non-monotonicity returning at larger $q$. |
 | **H6** | Block Krylov's gap-independent bound shows up empirically as a *flatter* error curve across gaps. | **Rejected** | The spread across polynomial rows widened from 104× to 1708×; the improvement shrinks as the gap approaches 1. The prediction mistranslated the theorem - see `notes/block-krylov-prediction.md`. |
-| **H7** | CholeskyQR2 recovers Householder-quality orthogonality at substantially lower cost, up to a predictable conditioning threshold. | **Open - V3** | CholeskyQR2 fails where CholeskyQR does, or shows no speed advantage. |
+| **H7** | CholeskyQR2 recovers Householder-quality orthogonality at substantially lower cost, up to a predictable conditioning threshold. | **Confirmed** | Accuracy: matches Householder within 1.2× wherever the first pass completes. Cost: 1.12× faster (CholeskyQR alone 2.05×), single-threaded OpenBLAS at m=200, n=30. |
 | **H8** | Sketch operator choice (Gaussian / SRHT / sparse sign) changes cost but not accuracy, outside pathological spectra. | **Open - V4** | Measurable accuracy differences at matched $\ell$. |
 
-H2 is the central open claim. H7 is the next test.
+H2 is the central open claim. H8 is the next test.
 
 ---
 
@@ -176,6 +176,7 @@ randomized-numerical-linear-algebra/
 │   ├── linalg.hpp                  # SVD, QR, norms, error metrics
 │   ├── random.hpp                  # seeded Gaussian sketch
 │   ├── test_matrices.hpp           # prescribed-spectrum generator
+│   ├── timing.hpp                  # median-of-runs wall-clock timer
 │   └── rsvd.hpp                    # randomized SVD + variants
 ├── src/                            # implementations, one per header
 ├── tests/
@@ -219,7 +220,8 @@ randomized-numerical-linear-algebra/
 
 ### Known debts
 
-- No timing instrumentation of any kind; every result so far is accuracy only.
+- Timing results are OpenBLAS 0.3.26 single-threaded on one machine. Accelerate and MKL will differ; the same benchmark on reference netlib BLAS reverses the CholeskyQR2 conclusion. See `derivations/notes/blas-dependence.md` (to be added).
+- Only the orthogonalization phase is timed. Nothing else is instrumented, and the unfair `truncated_svd` baseline still blocks any rSVD speedup claim.
 - `truncated_svd` is not a fair timing baseline (above).
 - Measurement floor at $\sim10^{-8}$ excess: the optimum is analytic, the achieved error numerical, and below that scale they cross. Ratios under 1 appear and are noise.
 - Cross-platform agreement verified only to printed precision (4–5 decimals).
@@ -266,6 +268,4 @@ This project is self-directed, so this section holds questions to resolve rather
 
 ## 10. Next task
 
-Implement CholeskyQR and CholeskyQR2 as alternatives to Householder QR in `orth`, and measure $`\|Q^\top Q - I\|_F`$ against $`\kappa(Y)`$ for each.
-
-CholeskyQR is three BLAS-3 operations against Householder's sequential reflector sweep, but it forms $`Y^\top Y`$ and so squares the condition number. Prediction to record before running: plain CholeskyQR loses orthogonality once $`\kappa(Y) > \varepsilon^{-1/2} \approx 10^8`$, and CholeskyQR2 recovers machine-precision orthogonality up to roughly that same threshold.
+Implement shifted CholeskyQR3.

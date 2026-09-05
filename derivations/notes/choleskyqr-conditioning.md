@@ -16,12 +16,9 @@ $$\kappa(A) \gtrsim \varepsilon^{-1/2} \approx 6.7\times10^{7}.$$
 
 ## Predictions
 
-1. Householder stays at $`\sim10^{-15}`$ for every $`\kappa`$ tested - it is
-   backward stable and never forms $`G`$.
+1. Householder stays at $`\sim10^{-15}`$ for every $`\kappa`$ tested - it is backward stable and never forms $`G`$.
 2. CholeskyQR matches it while $`\kappa \ll 10^8`$.
-3. Orthogonality degrades **before** outright failure, as with power iteration
-   at $`q=2`$: expect visible loss around $`\kappa \sim 10^6`$–$`10^7`$, where
-   $`\kappa^2`$ is within a few orders of $`1/\varepsilon`$.
+3. Orthogonality degrades **before** outright failure, as with power iteration at $`q=2`$: expect visible loss around $`\kappa \sim 10^6`$–$`10^7`$, where $`\kappa^2`$ is within a few orders of $`1/\varepsilon`$.
 4. `dpotrf` throws somewhere near $`\kappa \sim 10^8`$.
 
 Rough expectation, orthogonality error against $`\kappa`$:
@@ -72,29 +69,17 @@ The leading minor at which `dpotrf` breaks down (25 at $`\kappa=10^{10}`$, 22 at
 
 ## CholeskyQR2
 
-Running the algorithm twice - $`Q_1 = \mathrm{cholqr}(A)`$, then
-$`Q = \mathrm{cholqr}(Q_1)`$ - is claimed to restore machine-precision
-orthogonality for $`\kappa(A)`$ up to roughly $`\varepsilon^{-1/2}`$.
+Running the algorithm twice - $`Q_1 = \mathrm{cholqr}(A)`$, then $`Q = \mathrm{cholqr}(Q_1)`$ - is claimed to restore machine-precision orthogonality for $`\kappa(A)`$ up to roughly $`\varepsilon^{-1/2}`$.
 
-Before measuring, the open question was what $`\kappa(Q_1)`$ actually is. One
-candidate: it tracks $`\varepsilon\kappa(A)^2`$, which would limit CholeskyQR2
-to $`\kappa \lesssim 10^4`$ here. That guess was wrong, and the correct
-mechanism is why the method reaches $`10^8`$.
+Before measuring, the open question was what $`\kappa(Q_1)`$ actually is. One candidate: it tracks $`\varepsilon\kappa(A)^2`$, which would limit CholeskyQR2 to $`\kappa \lesssim 10^4`$ here. That guess was wrong, and the correct mechanism is why the method reaches $`10^8`$.
 
 ### Mechanism
 
-Write $`Q_1^\top Q_1 = I + E`$ with $`\|E\| \approx c\,\varepsilon\,\kappa(A)^2`$
-from the law above. The singular values of $`Q_1`$ are the square roots of the
-eigenvalues of $`Q_1^\top Q_1`$, which lie in $`[1-\|E\|,\, 1+\|E\|]`$, so
+Write $`Q_1^\top Q_1 = I + E`$ with $`\|E\| \approx c\,\varepsilon\,\kappa(A)^2`$ from the law above. The singular values of $`Q_1`$ are the square roots of the eigenvalues of $`Q_1^\top Q_1`$, which lie in $`[1-\|E\|,\, 1+\|E\|]`$, so
 
-$$\kappa(Q_1) \;\le\; \sqrt{\frac{1+\|E\|}{1-\|E\|}} \;\approx\; 1 + \|E\|
-\quad\text{for small } \|E\| .$$
+$$\kappa(Q_1) \;\le\; \sqrt{\frac{1+\|E\|}{1-\|E\|}} \;\approx\; 1 + \|E\|\quad\text{for small } \|E\| .$$
 
-The first pass does not reduce the conditioning *proportionally*, it collapses
-it to within $`\|E\|`$ of one. That is the whole trick. Feeding
-$`\kappa(Q_1)\approx 1`$ back through the error law gives a second-pass error of
-$`0.1\,\varepsilon`$, i.e. machine precision, regardless of how bad $`\kappa(A)`$
-was.
+The first pass does not reduce the conditioning *proportionally*, it collapses it to within $`\|E\|`$ of one. That is the whole trick. Feeding $`\kappa(Q_1)\approx 1`$ back through the error law gives a second-pass error of $`0.1\,\varepsilon`$, i.e. machine precision, regardless of how bad $`\kappa(A)`$ was.
 
 ### Measured
 
@@ -107,42 +92,34 @@ was.
 | 1e8 | 1.52e-01 | 1.09 | 2.71e-15 | 2.68e-15 |
 | 1e10 | fails | — | — | 3.20e-15 |
 
-$`\kappa(Q_1)`$ is 1 to three digits across four decades, reaching only 1.09 at
-$`\kappa(A)=10^8`$ where $`\|E\|=0.15`$. The bound predicts
-$`\sqrt{1.152/0.848}=1.17`$ there; measured 1.09, consistent with an upper
-bound.
+$`\kappa(Q_1)`$ is 1 to three digits across four decades, reaching only 1.09 at $`\kappa(A)=10^8`$ where $`\|E\|=0.15`$. The bound predicts $`\sqrt{1.152/0.848}=1.17`$ there; measured 1.09, consistent with an upper bound.
 
-CholeskyQR2 matches Householder to within a factor of 1.2 at every conditioning
-where it runs at all, including the row where the first pass returns
-$`1.5\times10^{-1}`$, i.e. nothing usable.
+CholeskyQR2 matches Householder to within a factor of 1.2 at every conditioning where it runs at all, including the row where the first pass returns $`1.5\times10^{-1}`$, i.e. nothing usable.
 
 ### What the threshold actually governs
 
-The $`\varepsilon^{-1/2}`$ figure is the right limit for CholeskyQR2, but not
-for the usual reason. It is not that error stays small below it - the first
-pass's error is $`0.1\,\varepsilon\kappa^2`$ throughout and reaches $`10^{-1}`$
-at the boundary. It is that the **Cholesky factorization still completes**
-below it. Past $`\kappa \approx 10^{10}`$ the Gram matrix is numerically
-indefinite, `dpotrf` fails, and there is no $`Q_1`$ to refine.
+The $`\varepsilon^{-1/2}`$ figure is the right limit for CholeskyQR2, but not for the usual reason. It is not that error stays small below it - the first pass's error is $`0.1\,\varepsilon\kappa^2`$ throughout and reaches $`10^{-1}`$ at the boundary. It is that the **Cholesky factorization still completes** below it. Past $`\kappa \approx 10^{10}`$ the Gram matrix is numerically indefinite, `dpotrf` fails, and there is no $`Q_1`$ to refine.
 
-CholeskyQR2's limit is therefore a limit on *survival of the first pass*, not on
-accuracy.
+CholeskyQR2's limit is therefore a limit on *survival of the first pass*, not on accuracy.
 
 ### Status of H7
 
-The accuracy half is confirmed, and a little bit more nuanced: not "recovers
-Householder-quality orthogonality" but "matches it to within a factor of 1.2,
-everywhere it runs."
+The accuracy half is confirmed, and a little bit more nuanced: not "recovers Householder-quality orthogonality" but "matches it to within a factor of 1.2, everywhere it runs."
 
-The cost half is still **unmeasured**. There is no timing harness in the repository,
-so "at substantially lower cost" remains a claim from the literature rather than
-a result from this work. CholeskyQR2 is two GEMMs, two Choleskys and two
-triangular solves against one Householder sweep - plausibly faster on parallel
-hardware, but that is yet to be measured.
+The cost half is now measured. Median of 7 runs after 2 warmups, $`m = 200`$, $`n = 30`$, single-threaded OpenBLAS 0.3.26:
+
+| method | time (µs) | vs Householder | flops |
+|---|---|---|---|
+| Householder | 41.5 | 1.00× | ~0.7 MFLOP |
+| CholeskyQR | 20.3 | **2.05× faster** | ~0.4 MFLOP |
+| CholeskyQR2 | 37.1 | **1.12× faster** | ~0.7 MFLOP |
+
+Times are flat across $`\kappa`$, as they should be: all three do identical work regardless of conditioning.
+
+CholeskyQR2 therefore matches Householder's accuracy at slightly lower cost, and CholeskyQR alone is twice as fast if you can tolerate $`\varepsilon\kappa^2`$ orthogonality. **H7 is now fully confirmed**, though the speed advantage at this size is modest: 1.12× is not the order-of-magnitude result the BLAS-3 framing might suggest, and $`m = 200`$ fits comfortably in cache, which is where Householder is least disadvantaged.
+
+The measured times track the flop counts (predicted 1.75× for CholeskyQR, measured 2.05×; predicted parity for CholeskyQR2, measured 1.12×). That agreement is itself contingent on the BLAS. See `notes/blas-dependence.md`, where the same benchmark on reference netlib BLAS gives the opposite conclusion.
 
 ### Next
 
-Shifted CholeskyQR3 (Fukaya et al. 2020) adds a diagonal shift
-$`G + s I`$ to keep the Gram matrix positive definite past the point where plain
-CholeskyQR dies, at the cost of a third pass. The $`\kappa \ge 10^{10}`$ rows
-are where it would earn its keep.
+Shifted CholeskyQR3 (Fukaya et al. 2020) adds a diagonal shift $`G + s I`$ to keep the Gram matrix positive definite past the point where plain CholeskyQR dies, at the cost of a third pass. The $`\kappa \ge 10^{10}`$ rows are where it would earn its keep.
