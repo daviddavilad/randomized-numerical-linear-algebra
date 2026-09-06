@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <limits>
 
 #include "rnla/lapack.hpp"
 
@@ -179,6 +180,63 @@ Matrix cholesky_qr2(const Matrix& A) {
   Matrix Q1 = cholesky_qr(A);
   Matrix Q2 = cholesky_qr(Q1);
   return Q2;
+}
+
+Matrix cholesky_qr_shifted(const Matrix& A, double s) {
+  const int m = A.rows();
+  const int n = A.cols();
+  if (m < n)
+    throw std::invalid_argument("cholesky_qr_shifted requires m >= n");
+  
+  Matrix G = matmul(A, A, true, false);   // A^T A, n x n
+  const int ldg = G.ld();
+
+  // Add s*I to G
+  for (int i = 0; i < n; ++i)
+    G(i, i) += s;
+
+  const char uplo = 'U';
+  int info = 0;
+  dpotrf_(&uplo, &n, G.data(), &ldg, &info);
+
+  if (info < 0)
+    throw std::runtime_error("dpotrf: invalid argument " + std::to_string(-info));
+  if (info > 0)
+    throw std::runtime_error(
+        "cholesky_qr_shifted: Gram matrix lost positive definiteness at leading minor " +
+        std::to_string(info) + " the shift s may be too small or the matrix is too ill-conditioned");
+
+  Matrix Q = A;   // copy: A is const, and dtrsm overwrites its operand
+
+  // Q = Q * R^{-1}, i.e. solve X * R = Q for X
+  const char side = 'R';
+  const char trans = 'N';
+  const char diag = 'N';
+  const double alpha = 1.0;
+  const int ldq = Q.ld();
+  dtrsm_(&side, &uplo, &trans, &diag, &m, &n, &alpha, G.data(), &ldg, Q.data(), &ldq);
+
+  return Q;
+}
+
+double norm_2(const Matrix& A) {
+  auto s = singular_values(A);
+  return s.empty() ? 0.0 : s.front();
+}
+
+Matrix cholesky_qr3(const Matrix& A) {
+  const int m = A.rows();
+  const int n = A.cols();
+
+  // Fukaya et al. (2020), eq. 3.2. Large enough to swamp the rounding error in
+  // forming A^T A, small enough not to distort the factorization.
+  const double eps = std::numeric_limits<double>::epsilon();
+  const double normA = norm_2(A);
+  const double s = 11.0 * (static_cast<double>(m) * n + n * (n + 1.0)) * eps * normA * normA;
+
+  Matrix Q = cholesky_qr_shifted(A, s);
+  Q = cholesky_qr(Q);
+  return cholesky_qr(Q);
 }
 
 double norm_fro(const Matrix& A) {

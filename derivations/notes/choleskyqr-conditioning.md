@@ -120,6 +120,41 @@ CholeskyQR2 therefore matches Householder's accuracy at slightly lower cost, and
 
 The measured times track the flop counts (predicted 1.75× for CholeskyQR, measured 2.05×; predicted parity for CholeskyQR2, measured 1.12×). That agreement is itself contingent on the BLAS. See `notes/blas-dependence.md`, where the same benchmark on reference netlib BLAS gives the opposite conclusion.
 
-### Next
+## Shifted CholeskyQR3
 
-Shifted CholeskyQR3 (Fukaya et al. 2020) adds a diagonal shift $`G + s I`$ to keep the Gram matrix positive definite past the point where plain CholeskyQR dies, at the cost of a third pass. The $`\kappa \ge 10^{10}`$ rows are where it would earn its keep.
+Fukaya et al. (2020) add a shift to keep the Gram matrix positive definite:
+$`R_s^\top R_s = A^\top A + sI`$ with
+$`s = 11(mn + n(n{+}1))\,\varepsilon\,\|A\|_2^2`$. Here
+$`s = 1.69\times10^{-11}`$, $`\sqrt{s} = 4.11\times10^{-6}`$.
+
+### cond(Q₁ˢ) in closed form
+
+The singular values of $`Q_1^s = AR_s^{-1}`$ are
+$`\sigma_i/\sqrt{\sigma_i^2+s}`$, so
+
+$$\kappa(Q_1^s) = \frac{\sigma_{\max}/\sqrt{\sigma_{\max}^2+s}}{\sigma_{\min}/\sqrt{\sigma_{\min}^2+s}} \;\longrightarrow\; \sqrt{s}\,\kappa(A) \quad (\sigma_{\min}\ll\sqrt{s})$$
+
+| $`\kappa(A)`$ | predicted | measured | shifted+1 | cholqr3 |
+|---|---|---|---|---|
+| 1e2 | 1.0000 | 1.0000 | 1.17e-15 | 8.04e-16 |
+| 1e6 | 4.2340 | 4.2340 | 1.85e-15 | 1.21e-15 |
+| 1e7 | 41.1539 | 41.1539 | 3.07e-14 | 1.41e-15 |
+| 1e8 | 411.4190 | 411.4190 | 3.07e-12 | 1.25e-15 |
+| 1e10 | 41141.7795 | 41141.7797 | 9.67e-09 | 1.21e-15 |
+| 1e12 | 4114177.95 | 4114192.82 | 8.32e-05 | 1.17e-15 |
+
+Five to seven significant figures throughout.
+
+### The third pass is necessary
+
+$`\kappa(Q_1^s)`$ grows linearly in $`\kappa(A)`$ - it is $`4\times10^6`$ at $`\kappa = 10^{12}`$, not $`O(1)`$. So one plain pass after the shift is not enough: the `shifted+1` column reaches only $`8.3\times10^{-5}`$, and follows the same $`c\,\varepsilon\,\kappa^2`$ law with $`\kappa(Q_1^s)`$ in place of $`\kappa(A)`$. Two plain passes are required, giving three in total.
+
+`cholqr3` returns $`\sim1.2\times10^{-15}`$ at every $`\kappa`$ tested, extending the working range from $`10^8`$ to at least $`10^{12}`$.
+
+### Prediction
+
+The closed form gives $`\kappa(Q_1^s) \approx 4.11\times10^{-6}\,\kappa(A)`$. Setting that equal to the $`u^{-1/2}`$ ceiling:
+
+$$\kappa(A)_{\max} \approx \frac{6.7\times10^{7}}{4.11\times10^{-6}} \approx 1.6\times10^{13}$$
+
+Adding $`\kappa = 10^{13}`$ and $`10^{14}`$ would locate the edge and test whether the closed form predicts it.

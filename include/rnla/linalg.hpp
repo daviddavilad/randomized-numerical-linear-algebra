@@ -36,6 +36,19 @@ Matrix cholesky_qr(const Matrix& A);
 // returns machine-precision orthogonality.
 Matrix cholesky_qr2(const Matrix& A);
 
+// CholeskyQR with a diagonal shift on the Gram matrix: G = A^T A + s*I.
+// The shift keeps G numerically positive definite past the point where plain
+// CholeskyQR fails, at the cost of a Q that is not orthonormal.
+Matrix cholesky_qr_shifted(const Matrix& A, double s);
+
+// Spectral norm (largest singular value). Computes a full SVD, so this is for
+// diagnostics and test harnesses, not hot paths.
+double norm_2(const Matrix& A);
+
+// Shifted CholeskyQR3 (Fukaya et al. 2020). One shifted pass to condition the
+// problem, then two plain passes to restore orthonormality.
+Matrix cholesky_qr3(const Matrix& A);
+
 // ||Q^T Q - I||_F. Measures how far Q is from having orthonormal columns.
 double orthogonality_error(const Matrix& Q);
 

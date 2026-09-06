@@ -1,23 +1,34 @@
 #include <cmath>
 #include <cstdio>
 #include <exception>
+#include <limits>
 
 #include "rnla/linalg.hpp"
 #include "rnla/matrix.hpp"
 #include "rnla/test_matrices.hpp"
 #include "rnla/timing.hpp"
 
+namespace {
+
+rnla::TestMatrix make(int m, int n, double kappa) {
+  const double alpha = std::log(kappa) / (n - 1);
+  return rnla::make_test_matrix(m, n, rnla::Spectrum::Exponential, alpha, 7);
+}
+
+}  // namespace
+
 int main() {
   const int m = 200, n = 30;
   const double kappas[] = {1e2, 1e4, 1e6, 1e7, 1e8, 1e10, 1e12};
 
+  std::printf("=== Householder vs CholeskyQR ===\n");
   std::printf("%10s %14s %14s %12s %14s %10s %10s %10s\n", "kappa", "householder", "cholqr", "cond(Q1)", "cholqr2", "t_hh(us)", "t_c(us)", "t_c2(us)");
+
   for (double kappa : kappas) {
     // exponential spectrum over r = min(m,n) values has
-    //   kappa = sigma_0 / sigma_{r-1} = e^{alpha(r-1)}
+    // kappa = sigma_0 / sigma_{r-1} = e^{alpha(r-1)}
     // so alpha = ln(kappa) / (r-1)
-    const double alpha = std::log(kappa) / (n - 1);
-    auto tm = rnla::make_test_matrix(m, n, rnla::Spectrum::Exponential, alpha, 7);
+    auto tm = make(m, n, kappa);
     // Sanity: the constructed spectrum really has the requested conditioning.
     const double kappa_actual = tm.sigma.front() / tm.sigma.back();
     if (std::abs(kappa_actual - kappa) > 1e-6 * kappa)
@@ -26,7 +37,7 @@ int main() {
     const double eh = rnla::orthogonality_error(rnla::orth(tm.A));
 
     // cholesky_qr in a try/catch — it throws past the threshold.
-    //       print the error on success, "FAILED" on catch.
+    // print the error on success, "FAILED" on catch.
     double ec = 0.0;
     try {
       rnla::Matrix Q1 = rnla::cholesky_qr(tm.A);
@@ -49,6 +60,29 @@ int main() {
       std::printf("%10.2e %14.2e %14.2e %12.2e %14.2e %10.1f %10.1f %10.1f\n", kappa, eh, ec, kappa_q1, ec2, th * 1e6, tc * 1e6, tc2 * 1e6);
     } catch (const std::exception& e) {
       std::printf("%10.2e %14.2e   FAILED: %s\n", kappa, eh, e.what());
+    }
+  }
+
+  std::printf("\n=== Shifted CholeskyQR3 ===\n");
+  std::printf("%10s %12s %14s %14s\n", "kappa", "cond(Q1s)", "shifted+1", "cholqr3");
+
+  for (double kappa : kappas) {
+    auto tm = make(m, n, kappa);
+    try {
+      const double eps = std::numeric_limits<double>::epsilon();
+      const double nA = rnla::norm_2(tm.A);
+      const double s = 11.0 * (static_cast<double>(m) * n + n * (n + 1.0)) * eps * nA * nA;
+
+      rnla::Matrix Q1s = rnla::cholesky_qr_shifted(tm.A, s);
+      auto ss = rnla::singular_values(Q1s);
+      const double kq1s = ss.front() / ss.back();
+
+      const double e1 = rnla::orthogonality_error(rnla::cholesky_qr(Q1s));
+      const double e3 = rnla::orthogonality_error(rnla::cholesky_qr3(tm.A));
+
+      std::printf("%10.2e %12.4f %14.2e %14.2e\n", kappa, kq1s, e1, e3);
+    } catch (const std::exception& e) {
+      std::printf("%10.2e   FAILED: %s\n", kappa, e.what());
     }
   }
   return 0;
