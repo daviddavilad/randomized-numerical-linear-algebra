@@ -158,3 +158,21 @@ The closed form gives $`\kappa(Q_1^s) \approx 4.11\times10^{-6}\,\kappa(A)`$. Se
 $$\kappa(A)_{\max} \approx \frac{6.7\times10^{7}}{4.11\times10^{-6}} \approx 1.6\times10^{13}$$
 
 Adding $`\kappa = 10^{13}`$ and $`10^{14}`$ would locate the edge and test whether the closed form predicts it.
+
+### Testing the predicted edge
+
+The closed form gives $`\kappa(Q_1^s) \approx 4.11\times10^{-6}\,\kappa(A)`$, which reaches the $`u^{-1/2} \approx 6.7\times10^{7}`$ ceiling at $`\kappa(A) \approx 1.6\times10^{13}`$. Prediction: `cholqr3` holds at $`10^{13}`$ and degrades beyond.
+
+| $`\kappa(A)`$ | $`\kappa(Q_1^s)`$ | vs ceiling | cholqr3 |
+|---|---|---|---|
+| 1e13 | 4.11e7 | 0.6× | 1.22e-15 |
+| 1e14 | 4.11e8 | 6× | 1.16e-15 |
+| 1e15 | 4.11e9 | 60× | 4.50e-14 |
+
+**The prediction was incorrect.** At $`10^{14}`$, $`\kappa(Q_1^s)`$ is six times past the ceiling and the result is indistinguishable from every other row. Only at $`10^{15}`$ (sixty times past) it moves, and $`4.5\times10^{-14}`$ is still a usable answer.
+
+The $`u^{-1/2}`$ bound is sufficient, not sharp. The same conservatism appeared in plain CholeskyQR2 at $`\kappa = 10^8`$, where $`\|E\| = 0.15`$ and the second pass still recovered machine precision.
+
+**Open question.** At $`\kappa(Q_1^s) = 4\times10^8`$, $`\varepsilon\kappa^2 \approx 37`$, so the Gram matrix of $`Q_1^s`$ should be numerically indefinite and the next Cholesky should break down. It does not. A plausible reason is that $`Q_1^s`$'s singular values are not spread across that range but concentrated near 1 with only the last few small ($`\sigma_i/\sqrt{\sigma_i^2+s}`$ is close to 1 for every $`\sigma_i \gg \sqrt{s}`$) so the trailing minors stay positive. Not verified; the closed form makes this checkable by computing the full singular value distribution of $`Q_1^s`$ rather than just its extremes.
+
+The `shifted+1` column is non-monotonic past $`10^{13}`$ (34.5 then 1.60). Once the error is $`O(1)`$ its magnitude carries no information, i.e., those cells are not recording a measurement.

@@ -19,7 +19,7 @@ rnla::TestMatrix make(int m, int n, double kappa) {
 
 int main() {
   const int m = 200, n = 30;
-  const double kappas[] = {1e2, 1e4, 1e6, 1e7, 1e8, 1e10, 1e12};
+  const double kappas[] = {1e2, 1e4, 1e6, 1e7, 1e8, 1e10, 1e12, 1e13, 1e14, 1e15};
 
   std::printf("=== Householder vs CholeskyQR ===\n");
   std::printf("%10s %14s %14s %12s %14s %10s %10s %10s\n", "kappa", "householder", "cholqr", "cond(Q1)", "cholqr2", "t_hh(us)", "t_c(us)", "t_c2(us)");
@@ -80,7 +80,7 @@ int main() {
       const double e1 = rnla::orthogonality_error(rnla::cholesky_qr(Q1s));
       const double e3 = rnla::orthogonality_error(rnla::cholesky_qr3(tm.A));
 
-      std::printf("%10.2e %12.4f %14.2e %14.2e\n", kappa, kq1s, e1, e3);
+      std::printf("%10.2e %14.4e %14.2e %14.2e\n", kappa, kq1s, e1, e3);
     } catch (const std::exception& e) {
       std::printf("%10.2e   FAILED: %s\n", kappa, e.what());
     }

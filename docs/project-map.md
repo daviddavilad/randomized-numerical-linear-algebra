@@ -2,7 +2,7 @@
 
 **Status:** V2 complete. Block Krylov measured; performance work not started.
 **Author:** David Dávila
-**Date:** 1 Sep 2026
+**Date:** 7 Sep 2026
 
 ---
 
@@ -226,6 +226,7 @@ randomized-numerical-linear-algebra/
 - Measurement floor at $\sim10^{-8}$ excess: the optimum is analytic, the achieved error numerical, and below that scale they cross. Ratios under 1 appear and are noise.
 - Cross-platform agreement verified only to printed precision (4–5 decimals).
 - `orth` requires $m \ge n$; wide inputs unhandled.
+- The $`\varepsilon\kappa^2`$ criterion predicts Cholesky breakdown that does not occur. At $`\kappa(Q_1^s) = 4\times10^8`$ the Gram matrix should be numerically indefinite, yet the factorization succeeds and returns machine-precision orthogonality. So breakdown depends on more than the condition number (the shape of the spectrum matters, and the current error law does not capture it). As a result, any claims about where CholeskyQR fails is empirical, to be analyzed and understood better.
 
 ---
 
