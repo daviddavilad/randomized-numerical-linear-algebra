@@ -199,6 +199,30 @@ void test_cholesky_qr_well_conditioned() {
   check(ec < 1e-13, "CholeskyQR orthonormal on well-conditioned input");
 }
 
+void test_sparse_sign() {
+  const int m = 200, n = 30, zeta = 8;
+  rnla::Matrix S = rnla::sparse_sign(m, n, zeta, 42);
+
+  bool counts_ok = true;
+  for (int j = 0; j < n; ++j) {
+    int nnz = 0;
+    for (int i = 0; i < m; ++i)
+      if (S(i, j) != 0.0) ++nnz;
+    if (nnz != zeta) counts_ok = false;
+  }
+  check(counts_ok, "each column has exactly zeta nonzeros");
+
+  // Columns are unit norm by construction: zeta entries of magnitude
+  // 1/sqrt(zeta) give sum of squares = 1.
+  rnla::Matrix G = rnla::matmul(S, S, true, false);
+  bool diag_ok = true;
+  for (int i = 0; i < n; ++i)
+    if (!close(G(i, i), 1.0, 1e-12)) diag_ok = false;
+  check(diag_ok, "sparse sign columns have unit norm");
+
+  std::printf("    ||S^T S - I||_F = %.3e (sparse sign, zeta=%d)\n", rnla::orthogonality_error(S), zeta);
+}
+
 }  // namespace
 
 int main() {
@@ -214,6 +238,7 @@ int main() {
   test_krylov_matches_rsvd_at_q0();
   test_krylov_monotone();
   test_cholesky_qr_well_conditioned();
+  test_sparse_sign();
   std::printf("%s (%d failures)\n", failures ? "FAILED" : "OK", failures);
   return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
