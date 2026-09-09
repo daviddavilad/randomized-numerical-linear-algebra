@@ -7,7 +7,7 @@
 
 namespace rnla {
 
-TruncatedSVD randomized_svd(const Matrix& A, int k, int p, int q, std::uint64_t seed) {
+TruncatedSVD randomized_svd(const Matrix& A, int k, int p, int q, std::uint64_t seed, Sketch sketch) {
   const int m = A.rows();
   const int n = A.cols();
 
@@ -20,7 +20,7 @@ TruncatedSVD randomized_svd(const Matrix& A, int k, int p, int q, std::uint64_t 
   const int l = std::min(k + p, std::min(m, n));
 
   // Omega = gaussian(n, l, seed) (n x l)
-  Matrix Omega = gaussian(n, l, seed);
+  Matrix Omega = make_sketch(sketch, n, l, seed);
 
   // Y = A * Omega (m x l)
   Matrix Y = matmul(A, Omega);

@@ -37,3 +37,7 @@ target_compile_options(bench_spectrum PRIVATE -Wall -Wextra -Wpedantic)
 add_executable(bench_orth benchmarks/bench_orth.cpp)
 target_link_libraries(bench_orth PRIVATE rnla)
 target_compile_options(bench_orth PRIVATE -Wall -Wextra -Wpedantic)
+
+add_executable(bench_sketch benchmarks/bench_sketch.cpp)
+target_link_libraries(bench_sketch PRIVATE rnla)
+target_compile_options(bench_sketch PRIVATE -Wall -Wextra -Wpedantic)

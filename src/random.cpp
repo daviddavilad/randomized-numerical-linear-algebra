@@ -57,4 +57,14 @@ Matrix sparse_sign(int m, int n, int zeta, std::uint64_t seed) {
   return S;
 }
 
+Matrix make_sketch(const Sketch& spec, int m, int n, std::uint64_t seed) {
+  switch (spec.kind) {
+    case Sketch::Gaussian:
+      return gaussian(m, n, seed);
+    case Sketch::SparseSign:
+      return sparse_sign(m, n, spec.zeta, seed);
+  }
+  throw std::invalid_argument("unknown sketch kind");
+}
+
 }  // namespace rnla

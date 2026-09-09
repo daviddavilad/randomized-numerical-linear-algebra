@@ -4,6 +4,7 @@
 
 #include "rnla/linalg.hpp"
 #include "rnla/matrix.hpp"
+#include "rnla/random.hpp"
 
 namespace rnla {
 
@@ -12,7 +13,7 @@ namespace rnla {
 // q: power iterations — the sketch becomes (A A^T)^q A Omega, which raises
 //    each singular value to the power 2q+1 and so widens the relative gaps.
 //    Each iteration costs two additional passes over A.
-TruncatedSVD randomized_svd(const Matrix& A, int k, int p, int q, std::uint64_t seed);
+TruncatedSVD randomized_svd(const Matrix& A, int k, int p, int q, std::uint64_t seed, Sketch sketch = {});
 
 // Randomized block Krylov SVD (Musco & Musco 2015).
 // Builds the Krylov block [A*Omega, (A A^T)A*Omega, ..., (A A^T)^q A*Omega],

@@ -1,0 +1,80 @@
+#include <cstdint>
+#include <cstdio>
+#include <iterator>
+#include <vector>
+#include <cmath>
+
+#include "rnla/linalg.hpp"
+#include "rnla/matrix.hpp"
+#include "rnla/random.hpp"
+#include "rnla/rsvd.hpp"
+#include "rnla/test_matrices.hpp"
+
+namespace {
+
+struct Stat { double mean, se; };
+
+Stat summarize(const std::vector<double>& v) {
+  const double n = static_cast<double>(v.size());
+  double mean = 0.0;
+  for (double x : v) mean += x;
+  mean /= n;
+  double var = 0.0;
+  for (double x : v) var += (x - mean) * (x - mean);
+  var /= (n - 1.0);           // Bessel: sample variance, not population
+  return {mean, std::sqrt(var / n)};
+}
+
+}  // namespace
+
+int main() {
+  const int m = 300, n = 200, k = 20, p = 10;
+  const int n_seeds = 20;
+
+  struct Case { rnla::Spectrum kind; const char* label; double alpha; };
+  const Case cases[] = {
+      {rnla::Spectrum::Exponential, "exp", 0.3},
+      {rnla::Spectrum::Exponential, "exp", 0.1},
+      {rnla::Spectrum::Polynomial, "poly", 2.0},
+      {rnla::Spectrum::Polynomial, "poly", 1.0},
+  };
+  const int zetas[] = {1, 2, 4, 8, 16};
+  const std::size_t n_zetas = std::size(zetas);
+
+  std::printf("%-6s %6s %8s %20s", "family", "alpha", "gap", "gaussian");
+  for (int z : zetas) {
+    char buf[16];
+    std::snprintf(buf, sizeof buf, "zeta=%d", z);
+    std::printf(" %19s", buf);
+  }
+  std::printf("\n");
+
+  for (const Case& c : cases) {
+    auto tm = rnla::make_test_matrix(m, n, c.kind, c.alpha, 7);
+    const double gap = tm.sigma[k] / tm.sigma[k - 1];
+    const double opt = rnla::eckart_young_fro(tm.sigma, k);
+
+    std::vector<std::vector<double>> samples(1 + n_zetas);
+
+    for (std::uint64_t seed = 0; seed < static_cast<std::uint64_t>(n_seeds); ++seed) {
+      auto svd_g = rnla::randomized_svd(tm.A, k, p, 0, seed);
+      samples[0].push_back(rnla::reconstruction_error(tm.A, svd_g) / opt);
+
+      for (std::size_t i = 0; i < n_zetas; ++i) {
+        rnla::Sketch spec;
+        spec.kind = rnla::Sketch::SparseSign;
+        spec.zeta = zetas[i];
+        auto svd_s = rnla::randomized_svd(tm.A, k, p, 0, seed, spec);
+        samples[i + 1].push_back(rnla::reconstruction_error(tm.A, svd_s) / opt);
+      }
+    }
+
+    std::printf("%-6s %6.1f %8.4f", c.label, c.alpha, gap);
+    for (const auto& s : samples) {
+      const Stat st = summarize(s);
+      std::printf(" %10.6f±%.6f", st.mean, st.se);
+    }
+    std::printf("\n");
+  }
+  return 0;
+}

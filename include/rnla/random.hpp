@@ -16,4 +16,14 @@ Matrix gaussian(int m, int n, std::uint64_t seed);
 // Returned dense for now — the cost advantage needs a sparse apply to realize.
 Matrix sparse_sign(int m, int n, int zeta, std::uint64_t seed);
 
+// Which sketch operator to use, and its parameters.
+struct Sketch {
+  enum Kind { Gaussian, SparseSign };
+  Kind kind = Gaussian;
+  int zeta = 8;  // nonzeros per column; ignored unless kind == SparseSign
+};
+
+// Builds the m x n sketch matrix described by `spec`.
+Matrix make_sketch(const Sketch& spec, int m, int n, std::uint64_t seed);
+
 }  // namespace rnla
