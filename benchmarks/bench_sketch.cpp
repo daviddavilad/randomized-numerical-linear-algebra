@@ -29,7 +29,7 @@ Stat summarize(const std::vector<double>& v) {
 
 int main() {
   const int m = 300, n = 200, k = 20, p = 10;
-  const int n_seeds = 20;
+  const int n_seeds = 200;
 
   struct Case { rnla::Spectrum kind; const char* label; double alpha; };
   const Case cases[] = {
@@ -41,11 +41,11 @@ int main() {
   const int zetas[] = {1, 2, 4, 8, 16};
   const std::size_t n_zetas = std::size(zetas);
 
-  std::printf("%-6s %6s %8s %20s", "family", "alpha", "gap", "gaussian");
+  std::printf("%-6s %6s %8s %10s", "family", "alpha", "gap", "gaussian");
   for (int z : zetas) {
     char buf[16];
-    std::snprintf(buf, sizeof buf, "zeta=%d", z);
-    std::printf(" %19s", buf);
+    std::snprintf(buf, sizeof buf, "d(zeta=%d)", z);
+    std::printf(" %17s", buf);
   }
   std::printf("\n");
 
@@ -69,10 +69,14 @@ int main() {
       }
     }
 
-    std::printf("%-6s %6.1f %8.4f", c.label, c.alpha, gap);
-    for (const auto& s : samples) {
-      const Stat st = summarize(s);
-      std::printf(" %10.6f±%.6f", st.mean, st.se);
+    std::printf("%-6s %6.1f %8.4f %10.6f", c.label, c.alpha, gap, summarize(samples[0]).mean);
+
+    for (std::size_t i = 0; i < n_zetas; ++i) {
+      std::vector<double> d(samples[i + 1].size());
+      for (std::size_t j = 0; j < d.size(); ++j)
+        d[j] = samples[i + 1][j] - samples[0][j];
+      const Stat st = summarize(d);
+      std::printf(" %9.6f±%.6f", st.mean, st.se);
     }
     std::printf("\n");
   }
