@@ -50,13 +50,19 @@ int main() {
   std::printf("\n");
 
   for (const Case& c : cases) {
-    auto tm = rnla::make_test_matrix(m, n, c.kind, c.alpha, 7);
-    const double gap = tm.sigma[k] / tm.sigma[k - 1];
-    const double opt = rnla::eckart_young_fro(tm.sigma, k);
+    // Spectrum-derived quantities are the same for every rotation, so take
+    // them from one representative matrix.
+    auto tm0 = rnla::make_test_matrix(m, n, c.kind, c.alpha, 0);
+    const double gap = tm0.sigma[k] / tm0.sigma[k - 1];
+    const double opt = rnla::eckart_young_fro(tm0.sigma, k);
 
     std::vector<std::vector<double>> samples(1 + n_zetas);
 
-    for (std::uint64_t seed = 0; seed < static_cast<std::uint64_t>(n_seeds); ++seed) {
+    for (std::uint64_t seed = 0; seed < static_cast<std::uint64_t>(n_seeds);
+         ++seed) {
+      // New Haar rotation per seed: U and V change, the spectrum does not.
+      auto tm = rnla::make_test_matrix(m, n, c.kind, c.alpha, seed);
+
       auto svd_g = rnla::randomized_svd(tm.A, k, p, 0, seed);
       samples[0].push_back(rnla::reconstruction_error(tm.A, svd_g) / opt);
 
