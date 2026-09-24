@@ -102,22 +102,6 @@ $$A = QR,$$
 
 where $Q$ has orthonormal columns and $R$ is upper triangular.
 
-The paper is particularly interested in **column-pivoted QR (CPQR)**,
-
-$$AP = QR,$$
-
-where $P$ permutes the columns of $A$.
-
-The purpose of pivoting is to move informative or linearly independent columns toward the front of the matrix, making it possible to truncate the decomposition after $k$ steps and obtain a useful low-rank approximation.
-
-The columns of $Q$ form an orthonormal basis for the range of $A$. The paper therefore uses the notation
-
-$$Q = \mathrm{col}(A)$$
-
-when only this basis is required.
-
-CPQR is also useful for selecting skeleton columns for ID and CUR decompositions. At each step, it greedily chooses the remaining column with the largest Euclidean norm in the active submatrix.
-
 ---
 
 ### LU Decomposition
@@ -126,11 +110,7 @@ The LU decomposition is written as
 
 $$PA = LU,$$
 
-where $P$ is a permutation matrix, $L$ is lower triangular, and $U$ is upper triangular.
-
-As with QR, the factorization can be stopped after $k$ steps to produce a partial LU decomposition. Pivoting determines which rows are selected during the process.
-
-LU therefore provides another method for identifying informative rows or columns that may subsequently be used as skeletons in low-rank decompositions.
+LU factorization provides another method for identifying informative rows or columns that may subsequently be used as skeletons in low-rank decompositions.
 
 ---
 
@@ -476,6 +456,47 @@ $$\sum_i \ell_i(\lambda) = \mathrm{tr}\left(K\left(K + \lambda n I\right)^{-1}\r
 In the conclusion, the authors claim that the literature in the methods matrix case is reaching a "certain state of maturity", while the tensor environment is still evolving rapidly.
 
 I couldn't find any potential extensions of the work explicitly mentioned, but throughout the paper, the authors suggest that there are open fields/questions in the application problems, as described in the introduction.
+
+## Connections to this repository
+
+### Sketch operators
+
+The survey lists sparse sign matrices and claims that CountSketch "can require a larger embedding dimension". This is measured in my implementation: $`\zeta = 1`$ (which is CountSketch) comes in 8–12 standard errors worse than Gaussian at $`\ell = 30`$, while every $`\zeta \geq 2`$ sits within 1.3. So the transition happens between $`\zeta = 1`$ and $`\zeta = 2`$ at this $`\ell`$.
+
+Conditions: $`m = 300`$, $`n = 200`$, $`k = 20`$, $`p = 10`$, $`q = 0`$, 200 seeds, four spectra (exponential $`\alpha \in \{0.3, 0.1\}`$, polynomial $`\alpha \in \{2.0, 1.0\}`$), errors measured as the ratio to the Eckart–Young optimum.
+
+### Derived results
+
+$`\|S^\top S - I\|_F`$ is independent of $`\zeta`$ and equals $`\sqrt{n(n-1)/m}`$ (the overlap $`\zeta^2/m`$ and the variance $`1/\zeta^2`$ cancel) which is the same value a unit-normalized Gaussian gives. So a sparse sign matrix with $`\zeta = 2`$ is exactly as near-orthonormal as a dense Gaussian: nothing is lost on this measure by sparsifying. This is not in the survey.
+
+### Subspace embedding definition
+
+The survey defines the embedding property as
+
+$$(1-\varepsilon)\|Ax\| \leq \|\Gamma Ax\| \leq (1+\varepsilon)\|Ax\|.$$
+
+My repository measures column near-orthonormality, which is a different quantity. The survey gives me the right name for what I am not measuring.
+
+### Gaussian scaling
+
+Survey: $`\Gamma_{ij} \sim \mathcal{N}(0, 1/d)`$. My implementation: $`\mathcal{N}(0,1)`$. Irrelevant for rSVD since $`\mathrm{orth}(Y)`$ removes global scaling, but the $`1/d`$ is exactly what makes $`\|\Gamma x\| \approx \|x\|`$, so it would matter if I used the sketch directly as an embedding.
+
+### Coherence and rotation
+
+Coherence measures how localized information is in coordinates. Sparse sign is not rotation-invariant (it privileges coordinates) so my rotation experiment was probing the same underlying property from the sketch side rather than the matrix side. I found no effect at $`n = 200`$, however this is a small empirical data point on a question the survey says is open ("unclear how to best choose $`d`$ in practice since the coherence is typically unavailable"). This is a research question worth exploring.
+
+### Connection between the effective dimension and leverage scores
+
+$$\sum_i \ell_i(\lambda) = \mathrm{tr}\left(K\left(K + \lambda n I\right)^{-1}\right) = d_{\mathrm{eff}}(\lambda).$$
+
+This connects to the scalable kernel learning project. The effective dimension is measuring the same thing as the ridge leverage scores: how much information is there in the matrix and can we reduce the original problem to a much smaller problem containing approximately the same amount of information?
+
+### Covered by the survey, not implemented here
+
+- Interpolative and CUR decompositions
+- Subsampled randomized trigonometric transforms (SRTT)
+- All sampling methods (uniform, squared-norm, leverage-score, DPP)
+- Error estimation in the entry-access model
 
 ## Relevance to my work
 
